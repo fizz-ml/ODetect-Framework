@@ -1,6 +1,6 @@
 class Algorithm(object):
     def __init__(self, params):
-        raise NotImplementedError
+        self.set_params(params)
 
     def evaluate(self):
         """Return the next predicted point"""
@@ -38,6 +38,9 @@ class Algorithm(object):
 
             # Add it to the param dictionary
             self._params[key] = val
+
+            # Also add it as private fields to the algorithm object
+            setattr(self, '_' + key, val)
 
     def get_param_template(self):
         """Returns a dicitionary template with a description for each param

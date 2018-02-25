@@ -8,9 +8,8 @@ import numpy as np
 SAMPLING_RATE = 300.0
 class SFTModel(algorithm.Algorithm):
     def __init__(self, params):
-        self.set_params(params)
-        self.window_size = window_size
-        self._buffer = utils.buffer.Buffer(window_size)
+        super().__init__(params)
+        self._buffer = utils.buffer.Buffer(self._window_length)
         self._max_freq = 0.6
         self._min_freq = 0.05
 
