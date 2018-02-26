@@ -5,22 +5,20 @@ import utils.buffer
 import scipy.fftpack as fft
 import numpy as np
 
-SAMPLING_RATE = 300.0
 class SFTModel(algorithm.Algorithm):
     def __init__(self, params):
         super().__init__(params)
+        self._window_size = int(self._window_length * self._fs)
         self._buffer = utils.buffer.Buffer(self._window_length)
-        self._max_freq = 0.6
-        self._min_freq = 0.05
 
     def __call__(self,x):
         """Return the next predicted point"""
         self._update_buffer(x)
         b = self._get_buffer()
-        max_bin = np.ceil(self._max_freq / SAMPLING_RATE * self.window_size).astype(np.int32)
-        min_bin = np.floor(self._min_freq / SAMPLING_RATE * self.window_size).astype(np.int32)
+        max_bin = np.ceil(self._max_freq / self._fs * self._window_size).astype(np.int32)
+        min_bin = np.floor(self._min_freq / self._fs * self._window_size).astype(np.int32)
         fft_bin = np.argmax(np.abs(fft.fft(b))[min_bin:max_bin]) + min_bin
-        y = fft_bin * SAMPLING_RATE / self.window_size
+        y = fft_bin * self._window_length # self._fs / self.window_size
         return y
 
     def reset():
