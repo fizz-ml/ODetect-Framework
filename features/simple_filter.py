@@ -1,5 +1,6 @@
 from features.feature import WindowFeature
 from scipy.signal import butter, lfilter
+from scipy import signal
 
 class SimpleButterFilter(WindowFeature):
     def __init__(self, fs, lowcut, highcut, order=2):
@@ -25,4 +26,16 @@ class SimpleButterFilter(WindowFeature):
         b, a = self._butter_bandpass(lowcut, highcut, fs, order=order)
         y = lfilter(b, a, data)
         return y
+
+def stupid_local_norm(sig, win_size=2000):
+    win = signal.hann(window_size)
+    sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
+    shift_sig = sig - sig_mean
+
+    abs_sig = np.abs(shift_sig)
+    win = signal.hann(window_size)
+    sig_std = signal.convolve(abs_sig, win, mode='same') / sum(win)
+
+    norm_sig = shift_sig/sig_std
+    return norm_sig
 

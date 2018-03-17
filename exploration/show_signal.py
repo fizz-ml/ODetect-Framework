@@ -9,6 +9,7 @@ from features.peakdetect import peakdetect
 from scipy import interpolate
 
 from scipy.signal import butter, lfilter
+from scipy import signal
 
 from features.simple_filter import SimpleButterFilter
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
@@ -76,6 +77,25 @@ def normalize(ppg_signal):
     ppg_signal = (ppg_signal-np.mean(ppg_signal, axis=0))/np.std(ppg_signal)
     return ppg_signal
 
+def stupid_local_norm(sig, window_size=2000):
+    win = signal.hann(window_size)
+    sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
+    shift_sig = sig - sig_mean
+
+    abs_sig = np.abs(shift_sig)
+    win = signal.hann(window_size)
+    sig_std = signal.convolve(abs_sig, win, mode='same') / sum(win)
+
+    norm_sig = shift_sig/sig_std
+    return norm_sig
+
+    """
+    plt.plot(sig)
+    plt.plot(norm_sig)
+    plt.show()
+    """
+
+
 def visualize_dataset(dataset_path, plot):
     data = np.genfromtxt(dataset_path, delimiter=',')
     ppg_signal = data[:,1].flatten()
@@ -95,6 +115,13 @@ def visualize_dataset(dataset_path, plot):
     ppg_filtered = ppg_butter_filter.calc_feature(ppg_signal)
     # ppg_filtered = butter_bandpass_filter(ppg_signal, 3/60, 90/60, sample_freq, order=3)
 
+    print(ppg_filtered.shape)
+    if plot == -1:
+        stupid_local_norm(ppg_filtered)
+
+    ppg_filtered = stupid_local_norm(ppg_filtered)
+    print(ppg_filtered.shape)
+
     breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 40/60, order=2)
     breath_filtered = breath_butter_filter.calc_feature(breath_signal)
     # breath_filtered = butter_bandpass_filter(breath_signal, 3/60, 30/60, sample_freq, order=2)
@@ -102,6 +129,7 @@ def visualize_dataset(dataset_path, plot):
     # Calc the peaks
     ppg_trough_idx, ppg_trough_val, ppg_trough_period = calc_troughs(ppg_filtered)
     ppg_peak_idx, ppg_peak_val, ppg_peak_period = calc_peaks(ppg_filtered)
+
 
     if plot == 1:
         ax2.plot(breath_filtered, label="Filtered PPG")
@@ -127,6 +155,16 @@ def visualize_dataset(dataset_path, plot):
     ppg_peak_envelope, ppg_trough_envelope = ppg_envelopes_feature.calc_feature(ppg_filtered)
     ppg_amplitude_feature = WindowEnvelopesAmplitude()
     ppg_envelope_amplitude = ppg_amplitude_feature.calc_feature(ppg_filtered)
+
+    if plot == 0:
+        ax2.plot(ppg_signal, label="Raw PPG")
+        ax2.plot(ppg_peak_envelope)
+        ax2.plot(ppg_trough_envelope)
+        ax2.plot(ppg_filtered, label="Filtered PPG")
+        plt.legend()
+        plt.xlabel("Samples")
+        plt.title("Filtered PPG and Thermistor")
+        plt.show()
 
     if plot == 3:
         ax2.plot(ppg_filtered)
