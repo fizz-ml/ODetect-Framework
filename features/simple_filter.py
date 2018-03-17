@@ -1,0 +1,28 @@
+from features.feature import WindowFeature
+from scipy.signal import butter, lfilter
+
+class SimpleButterFilter(WindowFeature):
+    def __init__(self, fs, lowcut, highcut, order=2):
+        """
+        Expects fs, lowcut and highcut in Hz
+        """
+        self._fs = fs
+        self._lowcut = lowcut
+        self._highcut = highcut
+        self._order = order
+
+    def calc_feature(self, window):
+        return self._butter_bandpass_filter(window, self._lowcut, self._highcut, self._fs, order=self._order)
+
+    def _butter_bandpass(self, lowcut, highcut, fs, order=5):
+        nyq = 0.5 * fs
+        low = lowcut / nyq
+        high = highcut / nyq
+        b, a = butter(order, [low, high], btype='band')
+        return b, a
+
+    def _butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
+        b, a = self._butter_bandpass(lowcut, highcut, fs, order=order)
+        y = lfilter(b, a, data)
+        return y
+
