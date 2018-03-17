@@ -12,6 +12,7 @@ from scipy.signal import butter, lfilter
 
 from features.simple_filter import SimpleButterFilter
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
+from features.peak_feature import WindowPeakTroughPeriods
 
 def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
@@ -149,14 +150,15 @@ def visualize_dataset(dataset_path, plot):
     interp_ppg_trough_period = np.interp(np.arange(ppg_filtered.size), ppg_trough_idx, normalize(ppg_trough_period))
     """
 
-    interp_ppg_peak_period = interpolate_spline(ppg_peak_idx, normalize(ppg_peak_period), np.arange(ppg_filtered.size))
-    interp_ppg_trough_period = interpolate_spline(ppg_trough_idx, normalize(ppg_trough_period), np.arange(ppg_filtered.size))
+    # interp_ppg_peak_period = interpolate_spline(ppg_peak_idx, normalize(ppg_peak_period), np.arange(ppg_filtered.size))
+    # interp_ppg_trough_period = interpolate_spline(ppg_trough_idx, normalize(ppg_trough_period), np.arange(ppg_filtered.size))
+    interp_ppg_peak_period, interp_ppg_trough_period = WindowPeakTroughPeriods().calc_feature(ppg_filtered)
 
     if plot == 5:
         ax2.plot(normalize(breath_filtered), label="Filtered Thermistor")
         # ax2.scatter(ppg_peak_idx, normalize(ppg_peak_period), label="Period between peaks")
         # ax2.scatter(ppg_trough_idx, normalize(ppg_trough_period), label="Period between troughs")
-        ax2.plot(interp_ppg_peak_period, label="Smoothed period between peaks")
+        ax2.plot(normalize(interp_ppg_peak_period), label="Smoothed period between peaks")
         # ax2.plot(interp_ppg_trough_period)
         plt.legend()
         plt.xlabel("Samples")
