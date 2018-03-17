@@ -27,13 +27,14 @@ class SimpleButterFilter(WindowFeature):
         y = lfilter(b, a, data)
         return y
 
+#TODO: Saturday I will call this something else thats more professional or someshit like that
 def stupid_local_norm(sig, win_size=2000):
-    win = signal.hann(window_size)
+    win = signal.hann(win_size)
     sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
     shift_sig = sig - sig_mean
 
     abs_sig = np.abs(shift_sig)
-    win = signal.hann(window_size)
+    win = signal.hann(win_size)
     sig_std = signal.convolve(abs_sig, win, mode='same') / sum(win)
 
     norm_sig = shift_sig/sig_std
