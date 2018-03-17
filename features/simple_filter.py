@@ -1,6 +1,7 @@
 from features.feature import WindowFeature
 from scipy.signal import butter, lfilter
 from scipy import signal
+import numpy as np
 
 class SimpleButterFilter(WindowFeature):
     def __init__(self, fs, lowcut, highcut, order=2):
