@@ -5,7 +5,6 @@ from features.simple_filter import *
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
-import cv2
 import torch as t
 import torch.optim as optim
 import torch.nn as nn
