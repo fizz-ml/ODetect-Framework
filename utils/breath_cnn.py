@@ -5,6 +5,7 @@ from features.simple_filter import *
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2
 import torch as t
 import torch.optim as optim
 import torch.nn as nn
@@ -14,6 +15,8 @@ from torch.autograd import Variable as V
 
 t.manual_seed(7)
 np.random.seed(7)
+
+cpu_only = True
 
 def get_x(path,window):
     data = np.loadtxt(path, delimiter =",")[:,1]
@@ -65,19 +68,30 @@ class BreathCNN(nn.Module):
         #print(x.size())
         #print(out.size())
         return out
-        
+
 
 def main():
-    model = BreathCNN().cuda()
+    model = BreathCNN()
     opt = optim.Adam(model.parameters(),lr = 0.0004)
 
-    data_x_train = V(FT(get_x("../data/exp_011.csv",slice(0,-1))[:,:,::8])).cuda()
-    data_y_train = V(FT(get_y("../data/exp_011.csv",slice(0,-1))[:,:,::8])).cuda()
-    data_x_test = V(FT(get_x("../data/exp_010.csv",slice(0,-1))[:,:,::8])).cuda()
-    data_y_test = V(FT(get_y("../data/exp_010.csv",slice(0,-1))[:,:,::8])).cuda()
+    data_x_train = V(FT(get_x("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
+    data_y_train = V(FT(get_y("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
+    data_x_test = V(FT(get_x("data/max/exp_009.csv",slice(0,-1))[:,:,::8]))
+    data_y_test = V(FT(get_y("data/max/exp_009.csv",slice(0,-1))[:,:,::8]))
+
+
     l = data_y_test.size()[2]
     rsw = np.sin(np.linspace(0,420,l))/3
-    crsw = V(FT(rsw)).cuda()
+    crsw = V(FT(rsw))
+
+    if not cpu_only:
+        data_x_train = data_x_train.cuda()
+        data_y_train = data_y_train.cuda()
+        data_x_test = data_x_test.cuda()
+        data_y_test = data_y_test.cuda()
+        model = model.cuda()
+        crsw = crsw.cuda()
+
     def closure():
         opt.zero_grad()
         sq_err = t.mean((data_y_train - model(data_x_train))**2)
@@ -87,17 +101,21 @@ def main():
         return sq_err
 
 
-    for i in range(200):
+    for i in range(65):
         opt.step(closure)
         print(i)
 
+    """
     plt.plot(model(data_x_test).cpu().data.numpy()[0,0,:])
     plt.plot(data_y_test.cpu().data.numpy()[0,0,:])
     plt.show()
-        
+    """
+
+    return model(data_x_test).cpu().data.numpy()[0,0,:]
+
 if __name__ == "__main__":
     main()
 
 
-        
-    
+
+
