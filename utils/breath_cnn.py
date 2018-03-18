@@ -1,4 +1,7 @@
-from peak_detector import filter_signal
+from utils.peak_detector import filter_signal
+from features.envelope import *
+from features.peak_feature import *
+from features.simple_filter import *
 import sys
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,17 +15,24 @@ from torch.autograd import Variable as V
 t.manual_seed(7)
 np.random.seed(7)
 
-def get_x():
-    data = np.loadtxt("../data/exp_009.csv", delimiter =",")[:,1]
-    data_n = (data-np.mean(data))/np.std(data)
-    fs = filter_signal(data_n,200,7,0.1)
-    real_fs = np.real(fs)
-    return np.expand_dims(np.expand_dims(real_fs,0),0)
+def get_x(path,window):
+    data = np.loadtxt(path, delimiter =",")[:,1]
+    data_n = ((data-np.mean(data))/np.std(data))[window]
+    fs0 = SimpleButterFilter(200,3/60,90/60,order=3).calc_feature(data_n)
+    fs1 = stupid_local_norm(fs0)
+    fs2 = WindowEnvelopesAmplitude().calc_feature(fs1)
+    fs3 = (fs2 - np.mean(fs2))/np.std(fs2)
+    peakp,troughp = WindowPeakTroughPeriods().calc_feature(fs1)
+    fs4 = (peakp - np.mean(peakp))/np.std(peakp)
+    fs5 = (troughp - np.mean(troughp))/np.std(troughp)
+    #plt.plot(fs2[100001:-1:8])
+    features = np.stack([fs3,fs1,fs4,fs5])
+    return np.expand_dims(features,0)
 
-def get_y():
-    data = np.loadtxt("../data/exp_009.csv", delimiter =",")[:,3]
-    data_n = (data-np.mean(data))/np.std(data)
-    fs = filter_signal(data_n,200,1,0.5)
+def get_y(path,window):
+    data = np.loadtxt(path, delimiter =",")[:,3]
+    data_n = ((data-np.mean(data))/np.std(data))[window]
+    fs = SimpleButterFilter(200,3/60,90/60,order=3).calc_feature(data_n)
     real_fs = np.real(fs)
     return np.expand_dims(np.expand_dims(real_fs,0),0)
 
@@ -34,7 +44,7 @@ class BreathCNN(nn.Module):
         dil = 10
         pad = (k-1)*dil//2
         self.layers = nn.ModuleList()
-        self.layers.append(nn.Conv1d(1,n,9,padding=4))
+        self.layers.append(nn.Conv1d(4,n,9,padding=4))
         self.layers.append(nn.Conv1d(n,n,k,dilation=dil,padding=pad))
         self.layers.append(nn.Conv1d(n,n,1))
         """
@@ -61,10 +71,13 @@ def main():
     model = BreathCNN().cuda()
     opt = optim.Adam(model.parameters(),lr = 0.0004)
 
-    data_x_train = V(FT(get_x()[:,:,:100000:8])).cuda()
-    data_y_train = V(FT(get_y()[:,:,:100000:8])).cuda()
-    data_x_test = V(FT(get_x()[:,:,100001:-1:8])).cuda()
-    data_y_test = V(FT(get_y()[:,:,100001:-1:8])).cuda()
+    data_x_train = V(FT(get_x("../data/exp_011.csv",slice(0,-1))[:,:,::8])).cuda()
+    data_y_train = V(FT(get_y("../data/exp_011.csv",slice(0,-1))[:,:,::8])).cuda()
+    data_x_test = V(FT(get_x("../data/exp_010.csv",slice(0,-1))[:,:,::8])).cuda()
+    data_y_test = V(FT(get_y("../data/exp_010.csv",slice(0,-1))[:,:,::8])).cuda()
+    l = data_y_test.size()[2]
+    rsw = np.sin(np.linspace(0,420,l))/3
+    crsw = V(FT(rsw)).cuda()
     def closure():
         opt.zero_grad()
         sq_err = t.mean((data_y_train - model(data_x_train))**2)
@@ -74,8 +87,9 @@ def main():
         return sq_err
 
 
-    for i in range(500):
+    for i in range(200):
         opt.step(closure)
+        print(i)
 
     plt.plot(model(data_x_test).cpu().data.numpy()[0,0,:])
     plt.plot(data_y_test.cpu().data.numpy()[0,0,:])
