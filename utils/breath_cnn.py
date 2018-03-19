@@ -15,7 +15,7 @@ from torch.autograd import Variable as V
 t.manual_seed(7)
 np.random.seed(7)
 
-cpu_only = True
+cpu_only = False
 
 def get_x(path,window):
     data = np.loadtxt(path, delimiter =",")[:,1]
@@ -71,12 +71,18 @@ class BreathCNN(nn.Module):
 
 def main():
     model = BreathCNN()
-    opt = optim.Adam(model.parameters(),lr = 0.0004)
+    opt = optim.Adam(model.parameters(),lr = 0.0004,weight_decay= 0.1)
 
-    data_x_train = V(FT(get_x("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
-    data_y_train = V(FT(get_y("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
-    data_x_test = V(FT(get_x("data/max/exp_009.csv",slice(0,-1))[:,:,::8]))
-    data_y_test = V(FT(get_y("data/max/exp_009.csv",slice(0,-1))[:,:,::8]))
+    paths = ["data/max/exp_007.csv","data/max/exp_009.csv","data/max/exp_010.csv"]
+    data_x_train_list = []
+    data_y_train_list = []
+    for path in paths:
+        data_x_train_list.append(V(FT(get_x(path,slice(0,-1))[:,:,::8])))
+        data_y_train_list.append(V(FT(get_y(path,slice(0,-1))[:,:,::8])))
+    for y in data_y_train_list:
+        print(y)
+    data_x_test = V(FT(get_x("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
+    data_y_test = V(FT(get_y("data/max/exp_011.csv",slice(0,-1))[:,:,::8]))
 
 
     l = data_y_test.size()[2]
@@ -84,8 +90,8 @@ def main():
     crsw = V(FT(rsw))
 
     if not cpu_only:
-        data_x_train = data_x_train.cuda()
-        data_y_train = data_y_train.cuda()
+        data_x_train_list = [x.cuda() for x in data_x_train_list]
+        data_y_train_list = [y.cuda() for y in data_y_train_list]
         data_x_test = data_x_test.cuda()
         data_y_test = data_y_test.cuda()
         model = model.cuda()
@@ -93,22 +99,27 @@ def main():
 
     def closure():
         opt.zero_grad()
-        sq_err = t.mean((data_y_train - model(data_x_train))**2)
-        sq_err.backward()
+        sq_err = 0
+        length = 0
+        for i in range(len(data_y_train_list)):
+                x = data_x_train_list[i]
+                y = data_y_train_list[i]
+                sq_err += t.sum((y - model(x))**2)
+                length += y.size()[2]
+        mse = sq_err/length
+        mse.backward()
         sq_err_test = t.mean((data_y_test - model(data_x_test))**2)
-        print(sq_err.cpu().data.numpy(),"\t",sq_err_test.cpu().data.numpy())
+        print(mse.cpu().data.numpy(),"\t",sq_err_test.cpu().data.numpy())
         return sq_err
 
 
-    for i in range(65):
+    for i in range(1000):
         opt.step(closure)
         print(i)
 
-    """
     plt.plot(model(data_x_test).cpu().data.numpy()[0,0,:])
     plt.plot(data_y_test.cpu().data.numpy()[0,0,:])
     plt.show()
-    """
 
     return model(data_x_test).cpu().data.numpy()[0,0,:]
 
