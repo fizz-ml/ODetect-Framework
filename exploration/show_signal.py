@@ -224,7 +224,7 @@ def visualize_dataset(dataset_path, plot):
         # ax2.scatter(ppg_t_p_trough_idx, np.reciprocal(ppg_t_p_trough_period/sample_freq)*60, label="PIST Feature Trough to Trough Period", marker="+")
 
         from utils.breath_cnn import main
-        cnn_out = normalize(SimpleButterFilter(sample_freq, 3/60, 90/60, order=3).calc_feature(main()))
+        cnn_out = (SimpleButterFilter(sample_freq, 3/60, 90/60, order=3).calc_feature(main()))
         cnn_trough_idx, cnn_trough_val, cnn_trough_period = calc_troughs(cnn_out)
         cnn_peak_idx, cnn_peak_val, cnn_peak_period = calc_troughs(cnn_out)
         """
