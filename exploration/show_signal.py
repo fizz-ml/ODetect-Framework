@@ -224,19 +224,28 @@ def visualize_dataset(dataset_path, plot):
         # ax2.scatter(ppg_t_p_trough_idx, np.reciprocal(ppg_t_p_trough_period/sample_freq)*60, label="PIST Feature Trough to Trough Period", marker="+")
 
         from utils.breath_cnn import main
-        cnn_out = SimpleButterFilter(sample_freq, 3/60, 90/60, order=3).calc_feature(main())
-        # ax2.plot(np.arange(cnn_out.size)*8, cnn_out)
+        cnn_out = normalize(SimpleButterFilter(sample_freq, 3/60, 90/60, order=3).calc_feature(main()))
         cnn_trough_idx, cnn_trough_val, cnn_trough_period = calc_troughs(cnn_out)
-        # ax2.scatter(cnn_trough_idx*8, np.reciprocal(cnn_trough_period*8/sample_freq)*60, label="CNN Out Trough to Trough Period", marker="+")
+        cnn_peak_idx, cnn_peak_val, cnn_peak_period = calc_troughs(cnn_out)
+        """
+        ax2.plot(np.arange(cnn_out.size)*8, cnn_out)
+        ax2.scatter(cnn_trough_idx*8, cnn_trough_val, label="Thermistor Trough ")
+        ax2.plot((breath_filtered), label="Filtered Thermistor")
+        ax2.scatter(breath_trough_idx, breath_trough_val, label="Thermistor Trough ")
+        """
 
-        ax2.plot(breath_trough_idx, np.reciprocal(breath_trough_period/sample_freq)*60, '+-', label="Thermistor Trough to Trough Period")
-        ax2.plot(cnn_trough_idx*8, np.reciprocal(cnn_trough_period*8/sample_freq)*60, '+-', label="CNN Out Trough to Trough Period")
+
+        # ax2.scatter(cnn_trough_idx*8, np.reciprocal(cnn_trough_period*8/sample_freq)*60, label="CNN Out Trough to Trough Period", marker="+")
+        ax2.plot(breath_trough_idx, np.reciprocal(breath_trough_period/sample_freq)*60, '+-', label="Thermistor Trough to Trough Frequency")
+        ax2.plot(cnn_trough_idx*8, np.reciprocal(cnn_trough_period*8/sample_freq)*60, '+-', label="CNN Out Trough to Trough Frequency")
+        # ax2.plot(cnn_trough_idx*8, np.reciprocal(cnn_trough_period*8/sample_freq)*60, '+-', label="CNN Out Trough to Trough PFrequencyeriod")
 
         # ax2.plot(interp_breath_trough_period/sample_freq, label="Thermistor Trough to Trough Period")
         # ax2.plot(normalize(interp_ppg_peak_period), label="Smoothed period between peaks")
         plt.legend()
-        plt.xlabel("Samples")
-        plt.title("Period between peaks in filtered ppg")
+        plt.xlabel("Samples (at 200Hz)")
+        plt.ylabel("RR in bpm")
+        plt.title("Predicted vs Thermistor RR`")
         plt.show()
 
 
