@@ -5,6 +5,6 @@ if [ -e data/max ]; then
 fi
 mkdir data
 cd ./data
-curl -L "https://drive.google.com/uc?export=download&id=1NYll3mq-8D2educCErcbYe_iOBwg74Nu" > max.zip
+curl -L "https://drive.google.com/file/d/1vbe0wOwipm-p1tNDcFuiDE0YFa3qwUyV" > max.zip
 unzip max.zip
 rm max.zip
