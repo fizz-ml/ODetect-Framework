@@ -10,10 +10,10 @@ class WindowEnvelopes(WindowFeature):
     def __init__(self):
         pass
 
-    def calc_feature(self, window):
+    def calc_feature(self, window, lookahead=5, delta=0.02):
         """ Returns the max and min envelope of the window signal. """
         # Only grab the troughs not the peaks
-        peak_idx_value, trough_idx_value = peakdetect(window, lookahead=5, delta=0.02)
+        peak_idx_value, trough_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
         # Just need the position
         trough_idx = np.asarray([x[0] for x in trough_idx_value])
         trough_val = np.asarray([x[1] for x in trough_idx_value])
