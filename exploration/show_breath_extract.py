@@ -11,7 +11,7 @@ from scipy import interpolate
 from scipy.signal import butter, lfilter
 from scipy import signal
 
-from features.simple_filter import SimpleButterFilter, stupid_local_norm
+from features.simple_filter import SimpleButterFilter, stupid_local_norm, SimpleSplineFilter
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
 from features.peak_feature import WindowPeakTroughPeriods, WindowPeakTroughPoints
 
@@ -36,18 +36,23 @@ def visualize_dataset(dataset_path, plot):
 
     breath_signal = normalize(breath_signal)
 
-    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=2)
+    w=np.ones(20,'d')
+    breath_filtered1 = np.convolve(w/w.sum(),breath_signal,mode='valid')
+
+    breath_butter_filter = SimpleSplineFilter()
     breath_filtered = breath_butter_filter.calc_feature(breath_signal)
 
-    # GT breath signal
-    breath_filtered = normalize(breath_filtered)
-    ((breath_peak_idx, breath_peak_val, breath_peak_period),(breath_trough_idx, breath_trough_val, breath_trough_period)) = WindowPeakTroughPoints().calc_feature(breath_filtered, delta=0.1, lookahead=200)
+    # tck = interpolate.splrep(np.arange(breath_filtered1.size)[::40], breath_filtered1[::40], s=25.0)
+    # breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
 
+    # GT breath signal
+    # breath_filtered = normalize(breath_filtered)
+    ((breath_peak_idx, breath_peak_val, breath_peak_period),(breath_trough_idx, breath_trough_val, breath_trough_period)) = WindowPeakTroughPoints().calc_feature(breath_filtered, delta=0.1, lookahead=200)
 
     # ax2.plot(breath_trough_idx, np.reciprocal(breath_trough_period/sample_freq)*60, '+-', label="Thermistor Trough to Trough Frequency")
     ax2.plot(breath_trough_idx, breath_trough_val, '+', label="Thermistor Trough to Trough Frequency")
     ax2.plot(breath_filtered, label="Filtered Thermistor")
-    ax2.plot(breath_signal, label="Raw Thermistor")
+    ax2.plot(np.arange(breath_signal.size)[::10], breath_signal[::10], '.', label="Raw Thermistor")
     plt.legend()
     plt.xlabel("Samples (at 200Hz)")
     plt.ylabel("RR in bpm")

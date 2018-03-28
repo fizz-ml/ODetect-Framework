@@ -2,6 +2,20 @@ from features.feature import WindowFeature
 from scipy.signal import butter, lfilter
 from scipy import signal
 import numpy as np
+from scipy import interpolate
+
+class SimpleSplineFilter(WindowFeature):
+    def __init__(self):
+        pass
+
+    def calc_feature(self, window):
+        w=np.ones(20,'d')
+        breath_filtered1 = np.convolve(w/w.sum(),window,mode='valid')
+
+        tck = interpolate.splrep(np.arange(breath_filtered1.size)[::40], breath_filtered1[::40], s=25.0)
+        breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
+
+        return breath_filtered
 
 class SimpleButterFilter(WindowFeature):
     def __init__(self, fs, lowcut, highcut, order=2):
