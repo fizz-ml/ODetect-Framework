@@ -104,6 +104,17 @@ def visualize_dataset(dataset_path, plot):
     ppg_signal = normalize(ppg_signal)
     breath_signal = normalize(breath_signal)
 
+    if plot == -2:
+        # norm_sig = stupid_local_norm(ppg_filtered)
+        # fig, [ax1,ax2] = plt.subplots(1,2)
+        # ax1.plot(ppg_signal, "Raw PPG")
+        ax2.set_title("Raw PPG")
+        ax2.plot(ppg_signal, label="Raw PPG")
+        ax2.plot(breath_signal, label="Raw Breath")
+        plt.legend()
+        # plt.plot(norm_sig)
+        plt.show()
+
     # Filter the signals
     # ax2.plot(breath_signal)
     ppg_butter_filter = SimpleButterFilter(sample_freq, 3/60, 90/60, order=3)
