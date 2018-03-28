@@ -19,7 +19,7 @@ def butter_bandpass(lowcut, highcut, fs, order=5):
     nyq = 0.5 * fs
     low = lowcut / nyq
     high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
+    b, a = butter(order, high, btype='high')
     return b, a
 
 
@@ -117,7 +117,7 @@ def visualize_dataset(dataset_path, plot):
 
     # Filter the signals
     # ax2.plot(breath_signal)
-    ppg_butter_filter = SimpleButterFilter(sample_freq, 3/60, 90/60, order=3)
+    ppg_butter_filter = SimpleButterFilter(sample_freq, 3/60, 90/60, order=2)
     ppg_filtered = ppg_butter_filter.calc_feature(ppg_signal)
     # ppg_filtered = butter_bandpass_filter(ppg_signal, 3/60, 90/60, sample_freq, order=3)
 
@@ -135,7 +135,7 @@ def visualize_dataset(dataset_path, plot):
     ppg_filtered = stupid_local_norm(ppg_filtered)
     print(ppg_filtered.shape)
 
-    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=2)
+    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 40/60, order=1)
     breath_filtered = breath_butter_filter.calc_feature(breath_signal)
     # breath_filtered = butter_bandpass_filter(breath_signal, 3/60, 30/60, sample_freq, order=2)
 

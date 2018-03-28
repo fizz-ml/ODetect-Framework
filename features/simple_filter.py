@@ -5,14 +5,16 @@ import numpy as np
 from scipy import interpolate
 
 class SimpleSplineFilter(WindowFeature):
-    def __init__(self):
-        pass
+    def __init__(self, avg_win=10, ds=10, s=1.0):
+        self._avg_win = avg_win
+        self._ds = ds
+        self._s = s
 
     def calc_feature(self, window):
-        w=np.ones(20,'d')
+        w=np.ones(self._avg_win,'d')
         breath_filtered1 = np.convolve(w/w.sum(),window,mode='same')
 
-        tck = interpolate.splrep(np.arange(breath_filtered1.size)[::40], breath_filtered1[::40], s=25.0)
+        tck = interpolate.splrep(np.arange(breath_filtered1.size)[::self._ds], breath_filtered1[::self._ds], s=self._s)
         breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
 
         return breath_filtered
@@ -34,7 +36,7 @@ class SimpleButterFilter(WindowFeature):
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
-        b, a = butter(order, [low, high], btype='band')
+        b, a = butter(order, [high], btype='lowpass')
         return b, a
 
     def _butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
