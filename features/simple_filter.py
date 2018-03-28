@@ -10,7 +10,7 @@ class SimpleSplineFilter(WindowFeature):
 
     def calc_feature(self, window):
         w=np.ones(20,'d')
-        breath_filtered1 = np.convolve(w/w.sum(),window,mode='valid')
+        breath_filtered1 = np.convolve(w/w.sum(),window,mode='same')
 
         tck = interpolate.splrep(np.arange(breath_filtered1.size)[::40], breath_filtered1[::40], s=25.0)
         breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
