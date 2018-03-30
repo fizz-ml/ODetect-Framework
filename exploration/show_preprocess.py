@@ -28,7 +28,7 @@ def normalize(ppg_signal):
 
 def visualize_dataset(dataset_path, plot):
     data = np.genfromtxt(dataset_path, delimiter=',')
-    breath_signal = data[:,3].flatten()
+    breath_signal = data[:,1].flatten()
 
     # Plot
     fig, ax2 = plt.subplots(1,1)
@@ -36,8 +36,8 @@ def visualize_dataset(dataset_path, plot):
 
     breath_signal = normalize(breath_signal)
 
-    breath_butter_filter = SimpleSplineFilter(avg_win=40, ds=40, s=15.0)
-    breath_filtered = stupid_local_norm(breath_butter_filter.calc_feature(breath_signal),4000)
+    breath_butter_filter = SimpleSplineFilter()
+    breath_filtered = stupid_local_norm(breath_butter_filter.calc_feature(breath_signal))
     print(breath_filtered.shape)
     print(breath_signal.shape)
 
@@ -46,12 +46,12 @@ def visualize_dataset(dataset_path, plot):
 
     # GT breath signal
     # breath_filtered = normalize(breath_filtered)
-    ((breath_peak_idx, breath_peak_val, breath_peak_period),(breath_trough_idx, breath_trough_val, breath_trough_period)) = WindowPeakTroughPoints().calc_feature(breath_filtered, delta=1.0, lookahead=200)
+    ((breath_peak_idx, breath_peak_val, breath_peak_period),(breath_trough_idx, breath_trough_val, breath_trough_period)) = WindowPeakTroughPoints().calc_feature(breath_filtered, delta=0.1, lookahead=200)
 
     # ax2.plot(breath_trough_idx, np.reciprocal(breath_trough_period/sample_freq)*60, '+-', label="Thermistor Trough to Trough Frequency")
-    ax2.plot(breath_trough_idx, breath_trough_val, '.', markersize=10, label="Thermistor Trough to Trough Frequency")
-    ax2.plot(breath_peak_idx, breath_peak_val, '.', markersize=10, label="Thermistor Trough to Trough Frequency")
-    ax2.plot(breath_filtered, label="Filtered Thermistor")
+    ax2.plot(breath_trough_idx, -breath_trough_val, '.', markersize=10, label="Thermistor Trough to Trough Frequency")
+    ax2.plot(breath_peak_idx, -breath_peak_val, '.', markersize=10, label="Thermistor Trough to Trough Frequency")
+    ax2.plot(-breath_filtered, label="Filtered Thermistor")
     ax2.plot(np.arange(breath_signal.size)[::2], breath_signal[::2], '+', label="Raw Thermistor")
     plt.legend()
     plt.xlabel("Samples (at 200Hz)")

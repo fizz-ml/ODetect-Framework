@@ -13,7 +13,7 @@ class WindowPeakTroughPoints(WindowFeature):
             Note: Troughs are used over peaks since the troughs are more sharp for the co2 signal.
         '''
         # Only grab the troughs not the peaks
-        troughs_idx_value, peaks_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
+        peaks_idx_value, troughs_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
         # Just need the position
         troughs_idx = np.asarray([x[0] for x in troughs_idx_value])
         troughs_val = np.asarray([x[1] for x in troughs_idx_value])
@@ -37,13 +37,13 @@ class WindowPeakTroughPeriods(WindowFeature):
     def __init__(self):
         pass
 
-    def calc_feature(self, window, interpolate=True):
+    def calc_feature(self, window, interpolate=True, lookahead=5, delta=0.02):
         '''
             Returns the index of troughs and period between them for the supplied co2 signal.
             Note: Troughs are used over peaks since the troughs are more sharp for the co2 signal.
         '''
         # Only grab the troughs not the peaks
-        troughs_idx_value, peaks_idx_value = peakdetect(window, lookahead=5, delta=0.02)
+        peaks_idx_value, troughs_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
         # Just need the position
         troughs_idx = np.asarray([x[0] for x in troughs_idx_value])
         peaks_idx = np.asarray([x[0] for x in peaks_idx_value])
