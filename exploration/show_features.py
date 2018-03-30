@@ -91,7 +91,8 @@ def visualize_dataset(dataset_path, plot):
 
     fig, ax2 = plt.subplots(1,1)
     ax2.plot(normalize(breath_filtered), label="Filtered Thermistor")
-    ax2.plot(normalize(interp_ppg_peak_period+interp_ppg_trough_period)/2, label="Filtered Thermistor")
+    ax2.plot(normalize(interp_ppg_peak_period), label="Filtered Thermistor")
+    ax2.plot(normalize(interp_ppg_trough_period), label="Filtered Thermistor")
     plt.show()
 
     fig, ax2 = plt.subplots(1,1)

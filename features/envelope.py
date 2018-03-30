@@ -10,7 +10,7 @@ class WindowEnvelopes(WindowFeature):
     def __init__(self):
         pass
 
-    def calc_feature(self, window, lookahead=5, delta=0.02):
+    def calc_feature(self, window, lookahead=5, delta=0.02, s=0):
         """ Returns the max and min envelope of the window signal. """
         # Only grab the troughs not the peaks
         peak_idx_value, trough_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
@@ -21,13 +21,13 @@ class WindowEnvelopes(WindowFeature):
         peak_idx = np.asarray([x[0] for x in peak_idx_value])
         peak_val = np.asarray([x[1] for x in peak_idx_value])
 
-        peak_envelope = self._envelope(peak_idx, peak_val, window.size)
-        trough_envelope = self._envelope(trough_idx, trough_val, window.size)
+        peak_envelope = self._envelope(peak_idx, peak_val, window.size, s=s)
+        trough_envelope = self._envelope(trough_idx, trough_val, window.size, s=s)
 
         return [peak_envelope, trough_envelope]
 
-    def _envelope(self, idx, val, window_size):
-        return self._interpolate_spline(idx, val, np.arange(window_size))
+    def _envelope(self, idx, val, window_size, s=0):
+        return self._interpolate_spline(idx, val, np.arange(window_size), s=s)
 
     def _interpolate_spline(self, in_idx, in_val, out_idx, s=0):
         tck = interpolate.splrep(in_idx, in_val, s=s)
