@@ -15,19 +15,6 @@ from features.simple_filter import SimpleButterFilter
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
 from features.peak_feature import WindowPeakTroughPeriods
 
-def butter_bandpass(lowcut, highcut, fs, order=5):
-    nyq = 0.5 * fs
-    low = lowcut / nyq
-    high = highcut / nyq
-    b, a = butter(order, [low, high], btype='band')
-    return b, a
-
-
-def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
-    b, a = butter_bandpass(lowcut, highcut, fs, order=order)
-    y = lfilter(b, a, data)
-    return y
-
 """
 Visualizes the short time fourier transform of the signal.
 Produces graphs for each signal in the specified dataset.
@@ -135,7 +122,7 @@ def visualize_dataset(dataset_path, plot):
     ppg_filtered = stupid_local_norm(ppg_filtered)
     print(ppg_filtered.shape)
 
-    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=2)
+    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=5)
     breath_filtered = breath_butter_filter.calc_feature(breath_signal)
     # breath_filtered = butter_bandpass_filter(breath_signal, 3/60, 30/60, sample_freq, order=2)
 

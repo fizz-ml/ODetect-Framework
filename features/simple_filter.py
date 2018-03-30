@@ -1,5 +1,5 @@
 from features.feature import WindowFeature
-from scipy.signal import butter, lfilter
+from scipy.signal import butter, lfilter, zpk2sos, sosfilt, resample
 from scipy import signal
 import numpy as np
 from scipy import interpolate
@@ -34,12 +34,13 @@ class SimpleButterFilter(WindowFeature):
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
-        b, a = butter(order, [low, high], btype='band')
-        return b, a
+        z,p,k = butter(order, [low, high], btype='bandpass', output='zpk')
+        sos = zpk2sos(z, p, k)
+        return sos
 
     def _butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
-        b, a = self._butter_bandpass(lowcut, highcut, fs, order=order)
-        y = lfilter(b, a, data)
+        sos = self._butter_bandpass(lowcut, highcut, fs, order=order)
+        y = sosfilt(sos,data)
         return y
 
 #TODO: Saturday I will call this something else thats more professional or someshit like that
