@@ -33,8 +33,21 @@ def visualize_dataset(dataset_path, plot):
     sample_freq = 200
 
     ppg_signal = normalize(ppg_signal)
-    ppg_spline_filter = SimpleSplineFilter()
+    ppg_spline_filter = SimpleSplineFilter(ds=20, s=15.0)
     ppg_filtered = stupid_local_norm(ppg_spline_filter.calc_feature(ppg_signal), 8000)
+
+    '''
+    ppg_butter_filtered = SimpleButterFilter(sample_freq, 3/60, 90/60, order=2).calc_feature(ppg_signal)
+    ppg_spline_filter = SimpleSplineFilter().calc_feature(ppg_signal)
+
+    fig, ax2 = plt.subplots(1,1)
+    ax2.plot(ppg_spline_filter, label="Spline Filtered PPG")
+    ax2.plot(ppg_butter_filtered, label="Butter Filtered PPG")
+    ax2.plot(ppg_signal, label="Raw PPG")
+    plt.legend()
+    plt.show()
+    '''
+
 
     breath_signal = normalize(breath_signal)
     breath_spline_filter = SimpleSplineFilter(avg_win=40, ds=40, s=15.0)
@@ -54,6 +67,7 @@ def visualize_dataset(dataset_path, plot):
     ax2.plot(ppg_trough_idx, ppg_trough_val, '.', markersize=10, label="PPG Troughs")
     ax2.plot(ppg_peak_idx, ppg_peak_val, '.', markersize=10, label="PPG Peaks")
     ax2.plot(ppg_filtered, label="Filtered PPG")
+    ax2.plot(ppg_signal, label="Filtered PPG")
     # ax2.plot(np.arange(ppg_signal.size)[::2], ppg_signal[::2], '+', label="Raw Thermistor")
 
     plt.legend()
@@ -64,8 +78,8 @@ def visualize_dataset(dataset_path, plot):
 
 
     # Calculate gradient of PPG
-    grad_feature = np.gradient(stupid_local_norm(ppg_filtered,1000))
-    ((grad_peak_idx, grad_peak_val, grad_peak_period),(grad_trough_idx, grad_trough_val, grad_trough_period)) = WindowPeakTroughPoints().calc_feature(grad_feature, delta=0.2, lookahead=20)
+    grad_feature = stupid_local_norm(ppg_filtered,1000) #np.gradient(stupid_local_norm(ppg_filtered,1000))
+    ((grad_peak_idx, grad_peak_val, grad_peak_period),(grad_trough_idx, grad_trough_val, grad_trough_period)) = WindowPeakTroughPoints().calc_feature(grad_feature, delta=0.4, lookahead=40)
 
     fig, ax2 = plt.subplots(1,1)
     ax2.plot(grad_feature, label="Gradient of Filtered PPG")
@@ -74,6 +88,11 @@ def visualize_dataset(dataset_path, plot):
 
     # Interpolate period between troughs
     interp_ppg_peak_period, interp_ppg_trough_period = WindowPeakTroughPeriods().calc_feature(ppg_filtered, delta=0.1, lookahead=20)
+
+    fig, ax2 = plt.subplots(1,1)
+    ax2.plot(normalize(breath_filtered), label="Filtered Thermistor")
+    ax2.plot(normalize(interp_ppg_peak_period+interp_ppg_trough_period)/2, label="Filtered Thermistor")
+    plt.show()
 
     fig, ax2 = plt.subplots(1,1)
     ax2.plot(normalize(breath_filtered), label="Filtered Thermistor")
