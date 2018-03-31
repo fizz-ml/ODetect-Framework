@@ -24,7 +24,6 @@ def breathing_phase(breath_signal):
     idxs = idxs[sort_idxs]
     vals = vals[sort_idxs]
 
-    print(vals)
     return np.interp(np.arange(breath_signal.size), idxs, vals)
 
 def instant_breathing_period(breath_signal):
