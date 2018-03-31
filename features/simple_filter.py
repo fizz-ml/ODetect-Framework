@@ -58,3 +58,6 @@ def stupid_local_norm(sig, win_size=2000):
     norm_sig = shift_sig/sig_std
     return norm_sig
 
+def normalize(ppg_signal):
+    ppg_signal = (ppg_signal-np.mean(ppg_signal, axis=0))/np.std(ppg_signal)
+    return ppg_signal
