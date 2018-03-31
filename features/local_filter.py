@@ -20,11 +20,11 @@ class LocalLowPassFilter(WindowFeature):
 	y=[]
 	rang = n//window_size
 	for i in range(rang):        
-	    local_signal = x[i*window_size:min((i+1)*window_size, n)]        
-	    f, t, Zxx = signal.stft(local_signal, fs=sample_freq, nperseg=window_size/4, noverlap=window_size/5, boundary=None)
+	    local_signal =  x[i*window_size:min((i+1)*window_size, n)]        
+	    f, t, Zxx = signal.stft(local_signal, fs=self._sample_freq, nperseg=window_size/4, noverlap=window_size/5, boundary=None)
 	    f_mean_coefficients = np.mean(np.abs(Zxx[2:]),axis=1)
 	    f_max = f[np.argmax(f_mean_coefficients) + 2]
-	    filt = SimpleButterFilter(sample_freq, 1/60, f_max*cutoff_multiple, order=order)
+	    filt = SimpleButterFilter(self._sample_freq, 1/60, f_max*self._cutoff_multiple, order=self._order)
 	    y.append(filt.calc_feature(local_signal))
 	    
     return np.concatenate(y)
