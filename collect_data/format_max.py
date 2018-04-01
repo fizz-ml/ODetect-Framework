@@ -8,51 +8,68 @@ import argparse
 import serial
 import time
 import h5py
+import os
+import glob
 
-def format_data_file(input_file, output_file, sampling_rate=200):
+def calc_breath_signal(raw_max_therm):
+    # Averages the two nostril values
+    return (raw_max_therm[:,3].flatten()+raw_max_therm[:,2].flatten())/2
+
+def format_data_file(input_path, output_path, sampling_rate=200):
+    """ Formats a collected raw max thermistor file to standard data format. """
     try:
-        data = np.genfromtxt(input_file, delimiter=',')
+        raw_max_therm = np.genfromtxt(input_path, delimiter=',')
     except:
-        print("Reading of raw max file {} failed".format(input_file))
+        print("Reading of raw max file {} failed".format(input_path))
         raise
 
-    breath_signal = (data[:,3].flatten()+data[:,2].flatten())/2
+    breath_signal = calc_breath_signal(raw_max_therm)
+    ppg_signal = raw_max_therm[:,1].flatten()
 
-    ser = serial.Serial(serial_port, baud_rate)
-    data_list = []
-    while(True):
-       try:
-           val = ser.readline().strip().decode("utf-8")
+    # This timestamp can be unreliable due to buffering (We assume constant sampling rate)
+    unix_timestamp = raw_max_therm[:,0].flatten()
+    time_stamp = np.arange(0, len(breath_signal))/sampling_rate
 
-           # Ignore initial message
-           if "nitial" in val:
-               continue
+    out_file = h5py.File(, 'w')
+    out_file.create_dataset('ppg', )
+    out_file.create_dataset('', )
 
-           # Add timestamp to output
-           csv_row = "{}, {}\n".format(time.time(), val)
 
-           data_list.append(csv_row)
-           print(csv_row)
-       except KeyboardInterrupt:
-           break
-       except:
-           # Ignore bad lines
-           pass
-    return data_list
 
-def format_data_files(input_files, output_files, sampling_rate=200):
+def format_data_files(input_paths, output_paths, sampling_rate=200):
+    assert (len(input_files) == len(output_files))
+    for i_path, o_path in zip(input_paths, output_paths):
+        format_data_file(i_file, o_file, sampling_rate)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Format collected max data to be of standard form.')
-    parser.add_argument('input', type=str, help='Name of the max_thermistor raw signal file or directory of files to be formatted.')
-    parser.add_argument('output', type=str, help='Name of the file or directory to save the data to.')
+    parser.add_argument('input', type=str, help='Name of the max_thermistor raw signal file or directory of files to be formatted. For a directory extension of files is assumed to be ".csv".')
+    parser.add_argument('output', type=str, help='Name of the file or directory to save the data to. Should use extension of ".h5".')
     parser.add_argument('--sampling_rate', type=int, default=200, help='Sampling rate at which the data was collected (Note that this should be consistent within one dataset).')
     args = parser.parse_args()
 
-    save_path = args.save_path
-    serial_port_path = args.serial_port_path
+    input_path = args.input
+    output_path = args.output
     sampling_rate = args.sampling_rate
-    baud_rate = args.baud_rate
 
-    data_list = collect_data(serial_port=serial_port_path, baud_rate=baud_rate, sampling_rate=sampling_rate)
-    save_data(save_path, data_list)
+    input_files=[]
+    output_files=[]
+    if os.path.isdir(input_path):
+        if not os.path.exists(output_path):
+            os.makedirs(output_path)
+        elif not os.path.isdir(output_path):
+            raise IOError("Specified output path must be a directory if input is a directory.")
+        input_file_names = [os.path.basename(x) for x in glob.glob(os.path.join(input_path, '*.csv'))]
+        input_files = [os.path.join(input_path, x) for x in input_file_names]
+        output_files = [os.path.join(output_path, os.path.splitext(x)[0]+'.h5') for x in input_file_names]
+
+    elif os.path.isfile(input_path):
+        if os.path.isdir(output_path):
+            raise IOError("Specified output path must be a file if input is a file.")
+        input_files = [input_path]
+        output_files = [output_path]
+    else:
+        raise IOError("Specified input path does not specify an existing file or directory.")
+
+    format_data_files(input_files, output_files, sampling_rate)
+
