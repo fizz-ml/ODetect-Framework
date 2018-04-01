@@ -47,13 +47,13 @@ class SimpleButterFilter(WindowFeature):
 
 class SimpleLocalNorm(WindowFeature):
     """ Locally normalizes the input signal by removing mean and standard deviation computed locally around the current value weighted by a Hann window. """
-    def calc_feature(window):
-        win_size = np.floor(self._local_window_length*self._sampling_rate)
+    def calc_feature(self, window):
+        win_size = int(np.floor(float(self._local_window_length*self._sampling_rate)))
 
         win = signal.hann(win_size)
         #TODO replace these with reflected padding for conv to get rid of edge effects
-        sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
-        shift_sig = sig - sig_mean
+        sig_mean = signal.convolve(window, win, mode='same') / sum(win)
+        shift_sig = window - sig_mean
 
         abs_sig = np.abs(shift_sig)
         win = signal.hann(win_size)
