@@ -11,7 +11,7 @@ from scipy import interpolate
 from scipy.signal import butter, lfilter
 from scipy import signal
 
-from features.simple_filter import SimpleButterFilter
+from features.simple_filter import SimpleButterFilter, SimpleSplineFilter
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
 from features.peak_feature import WindowPeakTroughPeriods
 
@@ -106,6 +106,7 @@ def visualize_dataset(dataset_path, plot):
     # ax2.plot(breath_signal)
     ppg_butter_filter = SimpleButterFilter(sample_freq, 3/60, 90/60, order=3)
     ppg_filtered = ppg_butter_filter.calc_feature(ppg_signal)
+
     # ppg_filtered = butter_bandpass_filter(ppg_signal, 3/60, 90/60, sample_freq, order=3)
 
     print(ppg_filtered.shape)
@@ -122,8 +123,13 @@ def visualize_dataset(dataset_path, plot):
     ppg_filtered = stupid_local_norm(ppg_filtered)
     print(ppg_filtered.shape)
 
-    breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=5)
-    breath_filtered = breath_butter_filter.calc_feature(breath_signal)
+    # breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 50/60, order=5)
+    # breath_filtered = breath_butter_filter.calc_feature(breath_signal)
+
+    # breath_butter_filter = SimpleSplineFilter(avg_win=60, ds=15, s=45.0).calc_feature(breath_signal)
+
+    breath_butter_filter = SimpleSplineFilter(avg_win=60, ds=15, s=45.0)
+    breath_filtered = stupid_local_norm(breath_butter_filter.calc_feature(breath_signal),10000)
     # breath_filtered = butter_bandpass_filter(breath_signal, 3/60, 30/60, sample_freq, order=2)
 
     # Calc the peaks

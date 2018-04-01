@@ -1,5 +1,10 @@
 # ODetect-Framework
 
+Data Collection
+
+We include a simple script to extract simultaneous max sensor and thermistor data.
+
+
 The run-time behaviour is specified in the config file as follows:
 
 
@@ -17,3 +22,5 @@ run-behaviour: 'evaluate'
 
 
 '''
+
+
