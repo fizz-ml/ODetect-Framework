@@ -10,6 +10,7 @@ import time
 import h5py
 import os
 import glob
+import numpy as np
 
 def calc_breath_signal(raw_max_therm):
     # Averages the two nostril values
@@ -30,16 +31,21 @@ def format_data_file(input_path, output_path, sampling_rate=200):
     unix_timestamp = raw_max_therm[:,0].flatten()
     time_stamp = np.arange(0, len(breath_signal))/sampling_rate
 
-    out_file = h5py.File(, 'w')
-    out_file.create_dataset('ppg', )
-    out_file.create_dataset('', )
+    assert (len(breath_signal) == len(ppg_signal)), "Mismatched length of breath signal and ppg signal."
 
-
+    with h5py.File(output_path, 'w') as out_file:
+        data_set = out_file.create_dataset('data', (len(ppg_signal),), dtype=[('signal', 'float32'), ('target', 'float32')])
+        data_set.attrs['sampling_rate'] = sampling_rate
+        data_set.attrs['signal_type'] = 'ppg'
+        data_set.attrs['signal_sensor'] = 'max'
+        data_set.attrs['target_type'] = 'thermistor'
+        data_set.attrs['signal_sensor'] = 'green_thermistor'
 
 def format_data_files(input_paths, output_paths, sampling_rate=200):
+    """ Formats a list of files. Expects list of input paths and output paths with matching length. """
     assert (len(input_files) == len(output_files))
     for i_path, o_path in zip(input_paths, output_paths):
-        format_data_file(i_file, o_file, sampling_rate)
+        format_data_file(i_path, o_path, sampling_rate)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Format collected max data to be of standard form.')
