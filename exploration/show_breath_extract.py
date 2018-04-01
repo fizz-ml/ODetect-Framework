@@ -58,7 +58,7 @@ def thresholding_algo(y, lag, threshold, influence):
 
 def visualize_dataset(dataset_path, plot):
     data = np.genfromtxt(dataset_path, delimiter=',')
-    breath_signal = data[:,3].flatten()
+    breath_signal = (data[:,3].flatten()+data[:,2].flatten())/2
 
 
     # Plot
@@ -117,7 +117,10 @@ def visualize_dataset(dataset_path, plot):
 
 
     fig, ax2 = plt.subplots(1,1)
-    ax2.plot(instant_bpm(breath_signal, sample_freq))
+    bpm = instant_bpm(breath_signal, sample_freq)
+    print(bpm.shape)
+    print(breath_signal.shape)
+    ax2.plot(bpm)
     ax2.plot(np.arange(breath_avg.size)[::20], breath_avg[::20], '+', label="Raw Thermistor")
     plt.show()
     # fig, ax2 = plt.subplots(1,1)
@@ -125,8 +128,6 @@ def visualize_dataset(dataset_path, plot):
     # ax2.plot(breath_filtered, label="Filtered Thermistor")
     # plt.legend()
     # plt.show()
-
-
 
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
