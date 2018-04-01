@@ -1,6 +1,6 @@
 class Feature(object):
     def __init__(self,sampling_rate,parameter_dict):
-        """Initialize the feature with parameters specified by 
+        """Initialize the feature with parameters specified by
         the parameter dictionary.
         Args:
             sampling_rate: the rate at which data is sampled from the thermistor
@@ -8,25 +8,58 @@ class Feature(object):
             parameter_dict: paramters specific to the features in the
             form of a dictionary
         """
-        pass
+        self._sampling_rate = sampling_rate
+        self.set_params(parameter_dict)
 
-    def save(path):
-        """Save the parameters of the feature"""
-        pass
+    def get_params(self):
+        """Returns a dictionary with the current params"""
+        for key in param_temp.keys():
+            self._params[key] = getattr(self, '_' + key)
 
-    def load(path):
-        """Load the parameters of the feature"""
-        pass
+        return self._params
+
+    def set_params(self, params):
+        """ Set attributes using the supplied dictionary"""
+        # Reset internal params
+        self._params = {}
+
+        # Get the paramater template to check against
+        param_temp = get_param_template()
+
+        # Go over the keys to check each param
+        for key in param_temp.keys():
+            val = params.get(key)
+            if val is None:
+                raise KeyError("Param {} was not specified.".format(key))
+
+            # Cast param to the correct type if one was specified
+            if param_type is not None:
+                param_type = param_temp(key)[0]
+                val = param_type(val)
+
+            # Add it to the param dictionary
+            self._params[key] = val
+
+            # Also add it as private fields to the algorithm object
+            setattr(self, '_' + key, val)
+
+    def get_param_template(self):
+        """Returns a dicitionary template with a description for each param
+
+        The keys of the dictionary template are the names of the params and
+        the values are a pair of the expected type of the param and a
+        brief description of the param."""
+        raise NotImplementedError
 
 class WindowFeature(Feature):
     def calc_feature(self, window):
         """
         calculates the feature across the entire input window
         returns an equally sized array
-        
+
         Args:
             window: A 1 dimensional numpy array of float32s,
-            representing the 
+            representing the
         """
         pass
 
@@ -37,7 +70,7 @@ class TrainableFeature(Feature):
         trains the network on the trainining
         data and validation data. The training procedure is
         left up to the feature.
-        
+
         Args:
             Training data: A list of 1 dimensional numpy arrays of float32s,
             representing the segments on which to train.
@@ -52,8 +85,8 @@ class RTFeature(Feature):
     def push_x(self, x):
         """
         Pushes a new data point.
-        
-        Args: 
+
+        Args:
             x: a float32 representing the next datapoint
         """
         pass

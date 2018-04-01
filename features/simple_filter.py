@@ -45,18 +45,28 @@ class SimpleButterFilter(WindowFeature):
         y = sosfilt(sos,data)
         return y
 
-#TODO: Saturday I will call this something else thats more professional or someshit like that
-def stupid_local_norm(sig, win_size=2000):
-    win = signal.hann(win_size)
-    sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
-    shift_sig = sig - sig_mean
+class SimpleLocalNorm(WindowFeature):
+    """ Locally normalizes the input signal by removing mean and standard deviation computed locally around the current value weighted by a Hann window. """
+    def calc_feature(window):
+        win_size = np.floor(self._local_window_length*self._sampling_rate)
 
-    abs_sig = np.abs(shift_sig)
-    win = signal.hann(win_size)
-    sig_std = signal.convolve(abs_sig, win, mode='same') / sum(win)
+        win = signal.hann(win_size)
+        #TODO replace these with reflected padding for conv to get rid of edge effects
+        sig_mean = signal.convolve(sig, win, mode='same') / sum(win)
+        shift_sig = sig - sig_mean
 
-    norm_sig = shift_sig/sig_std
-    return norm_sig
+        abs_sig = np.abs(shift_sig)
+        win = signal.hann(win_size)
+        sig_std = signal.convolve(abs_sig, win, mode='same') / sum(win)
+
+        norm_sig = shift_sig/sig_std
+        return norm_sig
+
+    def get_param_template(self):
+        param_template = {
+            "local_window_length": (float, "The size of the Hanning window to compute local statistics with in seconds.") # Default was 2000/200
+            }
+        return param_template
 
 def normalize(ppg_signal):
     ppg_signal = (ppg_signal-np.mean(ppg_signal, axis=0))/np.std(ppg_signal)

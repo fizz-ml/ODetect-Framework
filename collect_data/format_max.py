@@ -35,11 +35,14 @@ def format_data_file(input_path, output_path, sampling_rate=200):
 
     with h5py.File(output_path, 'w') as out_file:
         data_set = out_file.create_dataset('data', (len(ppg_signal),), dtype=[('signal', 'float32'), ('target', 'float32')])
+        data_set['signal'] = ppg_signal
+        data_set['target'] = breath_signal
         data_set.attrs['sampling_rate'] = sampling_rate
         data_set.attrs['signal_type'] = 'ppg'
         data_set.attrs['signal_sensor'] = 'max'
         data_set.attrs['target_type'] = 'thermistor'
         data_set.attrs['signal_sensor'] = 'green_thermistor'
+
 
 def format_data_files(input_paths, output_paths, sampling_rate=200):
     """ Formats a list of files. Expects list of input paths and output paths with matching length. """
