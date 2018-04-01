@@ -19,7 +19,8 @@ def calc_breath_signal(raw_max_therm):
 def format_data_file(input_path, output_path, sampling_rate=200):
     """ Formats a collected raw max thermistor file to standard data format. """
     try:
-        raw_max_therm = np.genfromtxt(input_path, delimiter=',')
+        # Cut off first 10 lines as max can be initializing
+        raw_max_therm = np.genfromtxt(input_path, delimiter=',')[10:]
     except:
         print("Reading of raw max file {} failed".format(input_path))
         raise
