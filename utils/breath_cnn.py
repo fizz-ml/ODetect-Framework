@@ -2,6 +2,8 @@ from utils.peak_detector import filter_signal
 from features.envelope import *
 from features.peak_feature import *
 from features.simple_filter import *
+from features.local_filter import *
+from utils.thermistor import *
 import math
 import sys
 import numpy as np
@@ -30,19 +32,24 @@ def get_x(path,window):
     fs4 = (peakp - np.mean(peakp))/np.std(peakp)
     fs5 = (troughp - np.mean(troughp))/np.std(troughp)
     fs6 = stupid_local_norm(data_n)
+    llpf = LocalLowPassFilter(200,1.2)
+    fs7 = llpf.calc_feature(data_n,4000)
+
     #plt.plot(fs2[100001:-1:8])
-    features = np.stack([fs3,fs1,fs4,fs5,fs6])
+    features = np.stack([fs3,fs1,fs4,fs5,fs6,fs7])
     return np.expand_dims(features,0)
 
 def get_y(path,window):
     data = np.loadtxt(path, delimiter =",")[:,3]
     data_n = ((data-np.mean(data))/np.std(data))[window]
-    fs0 = SimpleButterFilter(200,3/60,90/60,order=3).calc_feature(data_n)
+    #fs0 = SimpleButterFilter(200,3/60,90/60,order=3).calc_feature(data_n)
     fs0 = SimpleSplineFilter(avg_win=20,ds=20,s=45).calc_feature(data_n)
     #fs1 = ((fs0-np.mean(fs0))/np.std(fs0))
     fs2 = stupid_local_norm(fs0,8000)
-    real_fs = np.real(fs2)
-    return np.expand_dims(np.expand_dims(fs2,0),0)
+    #bpm = (instant_bpm(data_n,200)-10)/5
+    #triangle = breathing_phase(data_n)
+    thermistor = fs2
+    return np.expand_dims(np.stack([thermistor],0),0)
 
 class BreathCNN(nn.Module):
     def __init__(self):
@@ -52,8 +59,10 @@ class BreathCNN(nn.Module):
         dil = 10
         pad = (k-1)*dil//2
         self.layers = nn.ModuleList()
-        self.layers.append(nn.Conv1d(5,n*2,9,padding=4))
+        self.layers.append(nn.Conv1d(6,n*2,9,padding=4))
         self.layers.append(nn.Conv1d(n*2,n,9,padding=4))
+        self.layers.append(nn.Conv1d(n,n,k,dilation=dil,padding=pad))
+        self.layers.append(nn.Conv1d(n,n,1))
         self.layers.append(nn.Conv1d(n,n,k,dilation=dil,padding=pad))
         self.layers.append(nn.Conv1d(n,n,1))
         self.layers.append(nn.Conv1d(n,n,k,dilation=dil,padding=pad))
@@ -81,7 +90,7 @@ def main():
 
     paths = [
             "data/max/exp_007.csv",
-            "data/max/exp_008.csv",
+            #"data/max/exp_008.csv",
             "data/max/exp_009.csv",
             "data/max/exp_010.csv",
             "data/max/exp_011.csv",
@@ -103,8 +112,9 @@ def main():
             "data/max/exp_027.csv",
             "data/max/exp_028.csv",
             "data/max/exp_029.csv",
-            #"data/max/exp_030.csv",
+            "data/max/exp_030.csv",
             "data/max/exp_031.csv",
+            "data/max/exp_032.csv",
             ]
     data_x_train_list = []
     data_y_train_list = []
@@ -142,7 +152,7 @@ def main():
                 length += y.size()[2]
         loss = l_p/length
         loss.backward()
-        sq_err_test = t.mean((data_y_test - model(data_x_test)[0,0,:])**2)
+        sq_err_test = t.mean((data_y_test[0,0,:] - model(data_x_test)[0,0,:])**2)
         print(loss.cpu().data.numpy(),"\t",sq_err_test.cpu().data.numpy())
         return sq_err
 
@@ -157,15 +167,35 @@ def main():
     x2 = mean - np.exp(log_std)
     plt.plot(mean)
     plt.plot(log_std)
-    plt.plot(log_std*0)
     plt.plot(data_y_test.cpu().data.numpy()[0,0,:])
     plt.show()
 
+    # Plot
+    fig, ax2 = plt.subplots(1,1)
+    sample_freq = 200
 
+    # Frequency
+    max_bin = 60
     x =  model(data_x_test).cpu().data.numpy()[0,0,:]
-    print(len(x))
-    print(len(resample(x,len(x)*ds)))
-    return resample(x,len(x)*ds)
+    x = resample(x,len(x)*ds)
+    f,ts, Zxx = signal.stft(x, fs=sample_freq, nperseg=5000, noverlap=3000, boundary=None)
+    """
+    ax2.set_xlabel("Time in s")
+    ax2.set_ylabel("RR in bpm")
+    ax2.pcolormesh(ts, f[2:max_bin]*60, np.sqrt(np.abs(Zxx)[2:max_bin]))#/f[2:30, np.newaxis])
+    ax2.set_ylim(f[2]*60, min(f[max_bin]*60,40)) #f[max_bin]*60)
+    """
+    # ax2.set_xlim(0, max_length/sample_freq)
+    breathing_rate  = np.dot(f[2:max_bin],Zxx[2:max_bin]**2)/np.sum(Zxx**2,axis = 0)
+    predition = resample(breathing_rate,len(x)*ds)
+    ground_truth = instant_bpm(resample(data_y_test[0,0,:],len(x)*ds))
+    plt.plot(predition)
+    plt.plot(ground_truth)
+
+    
+    plt.show()
+
+    return x
 
 if __name__ == "__main__":
     main()
