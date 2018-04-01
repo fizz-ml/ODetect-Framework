@@ -24,17 +24,18 @@ class Feature(object):
         self._params = {}
 
         # Get the paramater template to check against
-        param_temp = get_param_template()
+        param_temp = self.get_param_template()
 
         # Go over the keys to check each param
         for key in param_temp.keys():
+            (param_type, _) = param_temp[key]
             val = params.get(key)
             if val is None:
                 raise KeyError("Param {} was not specified.".format(key))
 
             # Cast param to the correct type if one was specified
             if param_type is not None:
-                param_type = param_temp(key)[0]
+                param_type = param_temp[key][0]
                 val = param_type(val)
 
             # Add it to the param dictionary
@@ -97,3 +98,14 @@ class RTFeature(Feature):
         """
         pass
 
+class IdentityWindowFeature(WindowFeature):
+    def get_param_template(self):
+        """Returns a dicitionary template with a description for each param
+
+        The keys of the dictionary template are the names of the params and
+        the values are a pair of the expected type of the param and a
+        brief description of the param."""
+        return {}
+
+    def calc_feature(self, window):
+        return window
