@@ -3,6 +3,35 @@ from features.peakdetect import peakdetect
 import numpy as np
 from scipy import interpolate
 
+class OldPeakTroughPoints():
+    def __init__(self):
+        pass
+
+    def calc_feature(self, window, delta=1.0, lookahead=100):
+        '''
+            Returns the index and value and period between peaks and troughs for the supplied co2 signal.
+        '''
+        peaks_idx_value, troughs_idx_value = peakdetect(window, lookahead=lookahead, delta=delta)
+
+        troughs_idx = np.asarray([x[0] for x in troughs_idx_value])
+        troughs_val = np.asarray([x[1] for x in troughs_idx_value])
+        peaks_idx = np.asarray([x[0] for x in peaks_idx_value])
+        peaks_val = np.asarray([x[1] for x in peaks_idx_value])
+
+        trough_period = self._calc_period(troughs_idx)
+        peak_period = self._calc_period(peaks_idx)
+
+        return ((peaks_idx, peaks_val, peak_period),(troughs_idx, troughs_val, trough_period))
+
+    def _calc_period(self, idx):
+        troughs_period = np.empty_like(idx)
+
+        # For the very last trough assume same period as next one
+        troughs_period[:-1] = np.diff(idx)
+        troughs_period[-1] = troughs_period[-2]
+        return troughs_period
+
+
 class WindowPeakTroughPoints(WindowFeature):
     def __init__(self,sampling_rate,in_features,parameter_dict):
         super(WindowPeakTroughPoints,self).__init__(sampling_rate,in_features,parameter_dict)
@@ -13,7 +42,8 @@ class WindowPeakTroughPoints(WindowFeature):
             Returns the index and value and period between peaks and troughs for the supplied co2 signal.
         '''
         window = self._in_features[0].calc_feature(window)
-        peaks_idx_value, troughs_idx_value = peakdetect(window, lookahead=self._lookahead, delta=self._delta)
+        lookahead = int(np.floor(float(self._lookahead_length*self._sampling_rate)))
+        peaks_idx_value, troughs_idx_value = peakdetect(window, lookahead=lookahead, delta=self._delta)
 
         troughs_idx = np.asarray([x[0] for x in troughs_idx_value])
         troughs_val = np.asarray([x[1] for x in troughs_idx_value])
@@ -24,7 +54,7 @@ class WindowPeakTroughPoints(WindowFeature):
 
     def get_param_template(self):
         param_template = {
-            "lookahead": (float, "Distance to look ahead from a peak candidate to determine if it is the actual peak in seconds."), # Default was 5/200
+            "lookahead_length": (float, "Distance to look ahead from a peak candidate to determine if it is the actual peak in seconds."), # Default was 5/200
             "delta": (float, "This specifies a minimum difference between a peak and the following points, before a peak may be considered a peak.") # Default was 0.02
             }
         return param_template

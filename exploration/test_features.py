@@ -15,6 +15,8 @@ from features.simple_filter import SimpleSplineFilter, SimpleButterFilter, Simpl
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
 from features.peak_feature import WindowPeakTroughPeriods, WindowPeakTroughPoints
 
+from utils import thermistor
+
 """
 """
 
@@ -131,6 +133,12 @@ def visualize_dataset(dataset_path, plot):
     ax.set_xlabel("Time in seconds")
 
     plt.legend()
+    plot_max()
+
+    # Instant BPM
+    bpm = thermistor.instant_bpm(target_signal, sampling_rate)
+    fig, ax = plt.subplots(1,1)
+    ax.plot(ts, bpm, label="Filtered Target")
     plot_max()
 
 
