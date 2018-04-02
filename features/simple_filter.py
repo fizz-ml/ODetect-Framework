@@ -7,6 +7,7 @@ from scipy import interpolate
 class SimpleSplineFilter(WindowFeature):
     """ Passes local average over the window then fits regularized cubic splines to it and outputs interpolated values. """
     def calc_feature(self, window):
+        window = self._in_features[0].calc_feature(window)
         win_size = int(np.floor(float(self._local_window_length*self._sampling_rate)))
         w=np.ones(win_size,'d')
         window = np.convolve(w/w.sum(),window,mode='same')
@@ -26,6 +27,7 @@ class SimpleButterFilter(WindowFeature):
     """ Runs a butterworth bandpass filter over the window. Expects fs, lowcut and highcut in Hz. """
 
     def calc_feature(self, window):
+        window = self._in_features[0].calc_feature(window)
         return self._butter_bandpass_filter(window, self._low_cut, self._high_cut, self._sampling_rate, self._order)
 
     def _butter_bandpass(self, lowcut, highcut, fs, order):
@@ -52,6 +54,7 @@ class SimpleButterFilter(WindowFeature):
 class SimpleLocalNorm(WindowFeature):
     """ Locally normalizes the input signal by removing mean and standard deviation computed locally around the current value weighted by a Hann window. """
     def calc_feature(self, window):
+        window = self._in_features[0].calc_feature(window)
         win_size = int(np.floor(float(self._local_window_length*self._sampling_rate)))
 
         win = signal.hann(win_size)

@@ -3,6 +3,9 @@ from features.peakdetect import peakdetect
 from scipy import interpolate
 import numpy as np
 
+
+# TODO: This is not a proper feature compatible with the framework
+# Just a helper for WinEnvAmp below
 class WindowEnvelopes(WindowFeature):
     """
     Estimates the evelope of the input feature and returns the amplitude.
@@ -34,14 +37,25 @@ class WindowEnvelopes(WindowFeature):
         return interpolate.splev(out_idx, tck, der=0)
 
 
+
 class WindowEnvelopesAmplitude(WindowFeature):
     """
     Estimates the evelope of the input feature and returns the amplitude.
     """
-    def __init__(self):
-        self._envelope_feature = WindowEnvelopes()
-
     def calc_feature(self, window):
         """ Returns the max and min envelope of the window signal. """
-        max_envelope, min_envelope = self._envelope_feature.calc_feature(window)
+        self._envelope_feature = WindowEnvelopes()
+        lookahead = int(np.floor(float(self._lookahead_length*self._sampling_rate)))
+        max_envelope, min_envelope = self._envelope_feature.calc_feature(window, lookahead=lookahead, delta=self._delta)
         return np.abs(max_envelope-min_envelope)
+
+    def get_param_template(self):
+        param_template = {
+            "lookahead_length": (float, "Distance to look ahead from \
+                a peak candidate to determine if it is the actual \
+                peak in seconds."), # Default was 5/200
+            "delta": (float, "This specifies a minimum difference between \
+                a peak and the following points, before a peak may be \
+                considered a peak."), # Default was 0.02
+            }
+        return param_template

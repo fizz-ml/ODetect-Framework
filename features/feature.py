@@ -9,6 +9,9 @@ class Feature(object):
             form of a dictionary
         """
         self._in_features = in_features
+        # Syntactic sugar: if there are no features given, replace with identity.
+        if len(self._in_features) == 0:
+            self._in_features = [IdentityWindowFeature()]
         self._sampling_rate = sampling_rate
         self.set_params(parameter_dict)
 
@@ -101,6 +104,9 @@ class RTFeature(Feature):
         pass
 
 class IdentityWindowFeature(WindowFeature):
+    def __init__(self,sampling_rate=0,in_features=[],parameter_dict=[]):
+        pass
+
     def get_param_template(self):
         """Returns a dicitionary template with a description for each param
 
