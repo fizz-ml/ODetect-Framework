@@ -49,7 +49,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         np.random.seed(7)
         opt = optim.Adam(self._cnn.parameters(),lr=self._learning_rate)
 
-        data_x_train_list = [self._p[::self._down_sample]rocess_input(x) for x in train_x]
+        data_x_train_list = [self._process_input(x) for x in train_x]
         data_y_train_list = [self._process_label(y) for y in train_y]
 
         def closure():
@@ -66,8 +66,8 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
                     l_p += -t.sum(-(y-mean)**2/(2*t.exp(log_std*2))-1*log_std)
                     length += y.size()[2]
                     print('ysize', y.size()[2])
-            loss = l_p/length
             print('length', length)
+            loss = l_p/length
             loss.backward()
 
             l = [x.grad.cpu() for x in self._cnn.parameters()]
