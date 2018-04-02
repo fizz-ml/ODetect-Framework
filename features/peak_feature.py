@@ -1,5 +1,6 @@
 from features.feature import WindowFeature
 from features.peakdetect import peakdetect
+from features.simple_filter import normalize
 import numpy as np
 from scipy import interpolate
 
@@ -104,7 +105,12 @@ class WindowPeakTroughPeriods(WindowFeature):
             interp_peaks_period = interpolator(peaks_idx,
                     peaks_period, np.arange(window.size),
                     s=self._s)
-            return (interp_peaks_period if self._toggle_p_t else interp_troughs_period)
+
+            output = (interp_peaks_period if self._toggle_p_t else interp_troughs_period)
+            if self._normalize:
+                return normalize(output)
+            else:
+                return output
         else:
             return ((peaks_idx, peaks_period),
                     (troughs_idx, troughs_period))
@@ -120,9 +126,10 @@ class WindowPeakTroughPeriods(WindowFeature):
                 considered a peak."), # Default was 0.02
             "interp": (str, "The type of interpolation \
                 to be used for the output. \
-                One of: ['spline', 'line']."), # Default 'spline'
+                One of: ['spline', 'line']."), # Default was 'spline'
             "s": (float, "Regularization parameter for smoothing, \
-                if using the spline interpolation.") # Default 0
+                if using the spline interpolation."), # Default was 0
+            "normalize": (bool, "Whether to normalize the feature before returning it.", True)
             }
         return param_template
 

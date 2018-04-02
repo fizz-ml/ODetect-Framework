@@ -1,5 +1,6 @@
 from features.feature import WindowFeature
 from features.peakdetect import peakdetect
+from features.simple_filter import normalize
 from scipy import interpolate
 import numpy as np
 
@@ -47,7 +48,11 @@ class WindowEnvelopesAmplitude(WindowFeature):
         self._envelope_feature = WindowEnvelopes()
         lookahead = int(np.floor(float(self._lookahead_length*self._sampling_rate)))
         max_envelope, min_envelope = self._envelope_feature.calc_feature(window, lookahead=lookahead, delta=self._delta)
-        return np.abs(max_envelope-min_envelope)
+        amplitude = np.abs(max_envelope-min_envelope)
+        if self._normalize:
+            return normalize(amplitude)
+        else:
+            return amplitude
 
     def get_param_template(self):
         param_template = {
@@ -57,5 +62,6 @@ class WindowEnvelopesAmplitude(WindowFeature):
             "delta": (float, "This specifies a minimum difference between \
                 a peak and the following points, before a peak may be \
                 considered a peak."), # Default was 0.02
+            "normalize": (bool, "Whether to normalize the feature before returning it.", True)
             }
         return param_template

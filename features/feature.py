@@ -33,10 +33,16 @@ class Feature(object):
 
         # Go over the keys to check each param
         for key in param_temp.keys():
-            (param_type, _) = param_temp[key]
+            param_temp_tuple = param_temp[key]
+            param_type = param_temp_tuple[0]
+
             val = params.get(key)
             if val is None:
-                raise KeyError("Param {} was not specified.".format(key))
+                # Check if the template defines a default value
+                if len(param_temp_tuple) >= 3:
+                    val = param_temp_tuple[2]
+                else:
+                    raise KeyError("Param {} was not specified.".format(key))
 
             # Cast param to the correct type if one was specified
             if param_type is not None:

@@ -1,5 +1,8 @@
 from features.feature import IdentityWindowFeature, TrainableFeature
-from features.breath_cnn_feature import BreathCNNFeature
+from features.simple_filter import *
+from features.peak_feature import *
+from features.envelope import *
+from features.breath_cnn_feature import *
 from utils.thermistor import instant_bpm
 import argparse
 import json
@@ -8,6 +11,11 @@ import os
 
 feature_dict = {
         "id" : IdentityWindowFeature,
+        "ea" : WindowEnvelopesAmplitude,
+        "ptp" : WindowPeakTroughPeriods,
+        "butter" : SimpleButterFilter,
+        "spline" : SimpleSplineFilter,
+        "local_norm" : SimpleLocalNorm,
         "breath_cnn" : BreathCNNFeature
         }
 

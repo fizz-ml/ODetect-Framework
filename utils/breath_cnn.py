@@ -192,7 +192,7 @@ def main():
     plt.plot(predition)
     plt.plot(ground_truth)
 
-    
+
     plt.show()
 
     return x
