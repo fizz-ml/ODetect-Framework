@@ -13,6 +13,7 @@ class Feature(object):
 
     def get_params(self):
         """Returns a dictionary with the current params"""
+        param_temp = self.get_param_template()
         for key in param_temp.keys():
             self._params[key] = getattr(self, '_' + key)
 
