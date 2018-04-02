@@ -43,6 +43,7 @@ def visualize_dataset(dataset_path, plot):
     ax[1].set_xlabel("Time in seconds")
     plot_max()
 
+
     # SimpleLocalNorm
     input_signal = normalize(input_signal)
     local_input_signal = SimpleLocalNorm(sampling_rate, {'local_window_length': 20}).calc_feature(input_signal)
@@ -80,18 +81,20 @@ def visualize_dataset(dataset_path, plot):
     # SimpleSplineFilter
     target_signal = normalize(target_signal)
     filtered_target = SimpleSplineFilter(sampling_rate, {'local_window_length': 60/200, 'ds': 20, 's': 45.0}).calc_feature(target_signal)
+    alt_filtered_target = SimpleButterFilter(sampling_rate, {'low_cut': 3/60, 'high_cut': 40/60, 'order': 2}).calc_feature(target_signal)
 
-    fig, ax = plt.subplots(2,1)
+    fig, ax = plt.subplots(1,1)
     ax.set_title("SimpleSplineFilter on Target Signal")
     ax.plot(ts, target_signal, label="Norm Target Signal")
-
     ax.plot(ts, filtered_target, label="SimpleSplineFilter")
+    ax.plot(ts, alt_filtered_target, label="SimpleButterFilter")
 
-    ax.set_xlim(0,100)
+    ax.set_xlim(0,200)
 
     ax.set_xlabel("Time in seconds")
-    plot_max()
 
+    plt.legend()
+    plot_max()
 
     # ppg_spline_filter = SimpleSplineFilter(ds=15, s=15.0)
     # ppg_filtered = stupid_local_norm(ppg_spline_filter.calc_feature(ppg_signal), 8000)
