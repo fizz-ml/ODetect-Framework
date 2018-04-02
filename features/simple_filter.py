@@ -5,34 +5,30 @@ import numpy as np
 from scipy import interpolate
 
 class SimpleSplineFilter(WindowFeature):
-    def __init__(self, avg_win=10, ds=10, s=1.0):
-        self._avg_win=avg_win
-        self._ds=ds
-        self._s=s
-
+    """ Passes local average over the window then fits regularized cubic splines to it and outputs interpolated values. """
     def calc_feature(self, window):
-        w=np.ones(self._avg_win,'d')
-        breath_filtered1 = np.convolve(w/w.sum(),window,mode='same')
+        win_size = int(np.floor(float(self._local_window_length*self._sampling_rate)))
+        w=np.ones(win_size,'d')
+        window = np.convolve(w/w.sum(),window,mode='same')
 
-        tck = interpolate.splrep(np.arange(breath_filtered1.size)[::self._ds], breath_filtered1[::self._ds], s=self._s)
-        breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
+        tck = interpolate.splrep(np.arange(window.size)[::self._ds], window[::self._ds], s=self._s)
+        return interpolate.splev(np.arange(window.size), tck, der=0)
 
-        return breath_filtered
+    def get_param_template(self):
+        param_template = {
+            "local_window_length": (float, "Window to use for applying local averaging before spline fitting in seconds."), # Default was 10/200
+            "ds": (int, "Level of downsampling before fitting the spline. (Mostly to limit computation cost)"), # Try 10 or higher
+            "s": (float, "Regularization parameter for smoothing the spline interpolation.") # Default was 1.0 depends on signal (upwards of 60.0 for breath)
+            }
+        return param_template
 
 class SimpleButterFilter(WindowFeature):
-    def __init__(self, fs, lowcut, highcut, order=2):
-        """
-        Expects fs, lowcut and highcut in Hz
-        """
-        self._fs = fs
-        self._lowcut = lowcut
-        self._highcut = highcut
-        self._order = order
+    """ Runs a butterworth bandpass filter over the window. Expects fs, lowcut and highcut in Hz. """
 
     def calc_feature(self, window):
-        return self._butter_bandpass_filter(window, self._lowcut, self._highcut, self._fs, order=self._order)
+        return self._butter_bandpass_filter(window, self._low_cut, self._high_cut, self._sampling_rate, self._order)
 
-    def _butter_bandpass(self, lowcut, highcut, fs, order=5):
+    def _butter_bandpass(self, lowcut, highcut, fs, order):
         nyq = 0.5 * fs
         low = lowcut / nyq
         high = highcut / nyq
@@ -40,10 +36,18 @@ class SimpleButterFilter(WindowFeature):
         sos = zpk2sos(z, p, k)
         return sos
 
-    def _butter_bandpass_filter(self, data, lowcut, highcut, fs, order=5):
+    def _butter_bandpass_filter(self, data, lowcut, highcut, fs, order):
         sos = self._butter_bandpass(lowcut, highcut, fs, order=order)
         y = sosfilt(sos,data)
         return y
+
+    def get_param_template(self):
+        param_template = {
+            "low_cut": (float, "The lower limit of the frequency band in Hz."), # Default was 3/60
+            "high_cut": (float, "The upper limit of the frequency band in Hz."), # Default was 90/60
+            "order": (int, "The order of the filter.") # Default was 3
+            }
+        return param_template
 
 class SimpleLocalNorm(WindowFeature):
     """ Locally normalizes the input signal by removing mean and standard deviation computed locally around the current value weighted by a Hann window. """
