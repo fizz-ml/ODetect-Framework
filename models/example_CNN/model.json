@@ -1,0 +1,21 @@
+[
+    {
+        "type": "id",
+        "in_features": [],
+        "params": {}
+    },
+    {
+        "type": "breath_cnn",
+        "in_features": [0],
+        "params": {
+            "channel_count" : 10,
+            "dilation" : 10,
+            "field" : 15,
+            "layers" : 4,
+            "down_sample" : 12,
+            "train_time" : 5,
+            "learning_rate" : 0.0002,
+            "param_path" : "bla.t7"
+        }
+    }
+]

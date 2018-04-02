@@ -5,7 +5,6 @@ The script makes use of the pyserial module.
 """
 
 import argparse
-import serial
 import time
 import h5py
 import os

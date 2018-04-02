@@ -4,6 +4,7 @@ from utils.thermistor import instant_bpm
 import argparse
 import json
 import h5py
+import os
 
 feature_dict = {
         "id" : IdentityWindowFeature,
@@ -23,21 +24,21 @@ def train_model(sampling_rate,model_json_path,training_path,validation_path):
     train_x,train_y = load_dataset(training_path,sampling_rate)
     val_x,val_y = load_dataset(validation_path,sampling_rate)
 
-    model_spec = json.load(model_json_path)
- 
+    model_spec = json.load(open(model_json_path, 'r'))
+
     features = []
     for parameter_dict in model_spec:
         feature_type =  parameter_dict["type"]
         constructor = feature_dict[feature_type]
         in_feature_ids = parameter_dict["in_features"]
         in_features = [features[x] for x in in_feature_ids]
-        feature = constructor(sampling_rate,in_features,parameter_dict)
+        feature = constructor(sampling_rate,in_features,parameter_dict["params"])
 
         #train the feature
         if isinstance(feature,TrainableFeature):
             feature.train(train_x,train_y,val_x,val_y)
 
-        feature.append(feature)
+        features.append(feature)
     trained_model = features
     return trained_model
 
@@ -52,9 +53,9 @@ def test_model(test_json,model,sampling_rate)
 
     for metric in metric:
         loss_func = metric_dict[metric]
-        
+
         losses = []
-        for i in range(len(test_x))           
+        for i in range(len(test_x))
             losses.append(
             y = instant_bpm(sampling_rate,test_y)
             x = model.calc_feature(test_x):
@@ -74,7 +75,7 @@ def load_dataset(path,sampling_rate):
     inputs = []
     targets = []
     for f in files:
-        data = h5py.File(f, 'r')['data']
+        data = h5py.File(os.path.join(path, f), 'r')['data']
 
         input_signal = data['signal']
         target_signal = data['target']
@@ -85,13 +86,14 @@ def load_dataset(path,sampling_rate):
     return inputs,targets
 
 def parse_args():
-    argparse.ArgumentParser()
+    parser = argparse.ArgumentParser()
     parser.add_argument('sampling_rate', type=int, help='the sampling rate of the data')
     parser.add_argument('model_json_path',  help='the path to the json description of the model')
     #parser.add_argument('test_json_path',  help='path to test description json')
     parser.add_argument('training_path',  help='path to the training data directory')
     parser.add_argument('validation_path',  help='path to the validation data directory')
     #parser.add_argument('test_path',  help='path to the test data directory')
+    return parser.parse_args()
 
 def main():
     args = parse_args()

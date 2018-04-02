@@ -21,7 +21,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         inputs = self._process_input(window)
         output = self._cnn(inputs)[0,0,:].cpu().data.numpy()
         return resample(output,len(window))
-    
+
     def _process_input(self,x_window):
         feature_data = []
         ds_window = x_window[::self._down_sample]
@@ -36,14 +36,14 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
     def _process_label(self, y_window):
         ds_window = y_window[::self._down_sample]
         data_n = ((ds_window-np.mean(ds_window))/np.std(ds_window))
-        spline_filtered_data = SimpleSplineFilter(avg_win=int(20/200*self._sampling_rate),ds=int(20/200*self._sampling_rate),s=int(45/200*self._sampling_rate)).calc_feature(data_n)
-        thermistor = SimpleLocalNorm(self._sampling_rate,{"local_window_length":40}).calc_feature(spline_filtered_data)
+        spline_filtered_data = SimpleSplineFilter(self._sampling_rate, [], {'local_window_length':20/200,'ds':20,'s':45}).calc_feature(data_n)
+        thermistor = SimpleLocalNorm(self._sampling_rate, [], {"local_window_length":40/200}).calc_feature(spline_filtered_data)
         label = V(FT(np.expand_dims(np.expand_dims(thermistor,0),0)))
         if self._cuda:
             label = label.cuda()
         return label
 
-    
+
     def train(self,train_x,train_y,val_x,val_y):
         t.manual_seed(7)
         np.random.seed(7)
@@ -84,7 +84,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         self._cnn = BreathCNN(
                 len(self._in_features),
                 self._channel_count,
-                self._feild,
+                self._field,
                 self._dilation,
                 self._layers,
                 )
@@ -101,9 +101,8 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         param_template = {
             "channel_count" : (int,"the number of channels in the hidden layers of the cnn"),
             "dilation" : (int,"the dilation of each factor in the cnn"),
-            "feild" : (int,"the receptive feild of each layer in a cnn"),
+            "field" : (int,"the receptive field of each layer in a cnn"),
             "layers" : (int,"the number of layers in the cnn"),
-            "in_features" : (list,"list of feature objects that will go into the cnn"),
             "down_sample" : (int,"factor by which to down_sample the input signal"),
             "train_time" : (int,"how many iterations to train the cnn"),
             "learning_rate" : (float,"learning rate for the cnn"),
@@ -117,9 +116,9 @@ class BreathCNN(nn.Module):
         """
         Initialize a breath cnn
         Args:
-            i: number of inputs 
+            i: number of inputs
             n: number of channels reccomend 15
-            k: receptive feild reccomend 11
+            k: receptive field reccomend 11
             dil: dilations of the convolutions recommend 10
         """
         super(BreathCNN,self).__init__()
@@ -149,7 +148,7 @@ def main_test():
     param_template = {
         "channel_count" : 10,
         "dilation" : 10,
-        "feild" : 15,
+        "field" : 15,
         "layers" : 4,
         "in_features" : features,
         "down_sample" : 12,
