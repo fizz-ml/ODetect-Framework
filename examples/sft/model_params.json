@@ -1,0 +1,5 @@
+{
+    "window_length": 20.0,
+    "max_freq": 0.6,
+    "min_freq": 0.05
+}
