@@ -1,5 +1,5 @@
 class Feature(object):
-    def __init__(self,sampling_rate,parameter_dict):
+    def __init__(self,sampling_rate,in_features,parameter_dict):
         """Initialize the feature with parameters specified by
         the parameter dictionary.
         Args:
@@ -8,6 +8,7 @@ class Feature(object):
             parameter_dict: paramters specific to the features in the
             form of a dictionary
         """
+        self._in_features = in_features
         self._sampling_rate = sampling_rate
         self.set_params(parameter_dict)
 

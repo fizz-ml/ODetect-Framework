@@ -11,9 +11,9 @@ from scipy.signal import resample
 import os
 
 class BreathCNNFeature(WindowFeature,TrainableFeature):
-    def __init__(self,sampling_rate,parameter_dict):
+    def __init__(self,sampling_rate,in_features,parameter_dict):
         self._cuda = t.cuda.is_available()
-        super(BreathCNNFeature,self).__init__(sampling_rate,parameter_dict)
+        super(BreathCNNFeature,self).__init__(sampling_rate,in_features,parameter_dict)
         if self._cuda:
             self._cnn.cuda()
 
