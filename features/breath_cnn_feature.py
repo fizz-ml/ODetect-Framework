@@ -38,7 +38,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         ds_window = y_window[::self._down_sample]
         data_n = ((ds_window-np.mean(ds_window))/np.std(ds_window))
         spline_filtered_data = SimpleSplineFilter(self._sampling_rate, [], {'local_window_length':20/200,'ds':20,'s':45}).calc_feature(data_n)
-        thermistor = SimpleLocalNorm(self._sampling_rate, [], {"local_window_length":40/200}).calc_feature(spline_filtered_data)
+        thermistor = SimpleLocalNorm(self._sampling_rate, [], {"local_window_length":40}).calc_feature(spline_filtered_data)
         label = V(FT(np.expand_dims(np.expand_dims(thermistor,0),0)))
         if self._cuda:
             label = label.cuda()

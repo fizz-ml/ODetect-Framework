@@ -4,13 +4,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from scipy import signal
+from features.simple_filter import SimpleSplineFilter, SimpleLocalNorm, normalize
+
 
 def plot_max():
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
     plt.show()
 
-def visualize_stft_extractor(input_path, model_json):
+def visualize_model(input_path, model_json):
     # Parse the input data
     data = h5py.File(input_path, 'r')['data']
 
@@ -35,26 +37,26 @@ def visualize_stft_extractor(input_path, model_json):
     ax[1].set_xlabel("Time in seconds")
     plot_max()
 
-    fig, ax = plt.subplots(2,1)
-    ax[0].set_title("Model Output")
-    ax[0].plot(ts, model_out, label="Raw Input Signal")
-
-    ax[1].set_title("Raw Target Signal")
-    ax[1].plot(ts, target_signal, label="Raw Target Signal")
-
-    ax[0].set_xlabel("Time in seconds")
-    ax[1].set_xlabel("Time in seconds")
+    fig, ax = plt.subplots(1,1)
+    target_signal = normalize(target_signal)
+    filtered_target = SimpleSplineFilter(sampling_rate, [], {'local_window_length':60/200,'ds':20,'s':45}).calc_feature(target_signal)
+    filtered_target = SimpleLocalNorm(sampling_rate, [], {"local_window_length":40}).calc_feature(filtered_target)
+    ax.set_title("Model Output")
+    ax.plot(ts, model_out, label="Raw Model Output")
+    ax.plot(ts, filtered_target, label="Filtered Thermistor")
+    ax.set_xlabel("Time in seconds")
+    plt.legend()
     plot_max()
 
     # Visualize STFT
     fig, ax = plt.subplots(1,1)
     max_freq = 40/60
-    downsample = 4
-    f,t, Zxx = signal.stft(model_out[::downsample], fs=sampling_rate/downsample, nperseg=8000//downsample, noverlap=8000//downsample-10, boundary=None)
+    downsample = 2
+    f,t, Zxx = signal.stft(model_out[::downsample], fs=sampling_rate/downsample, nperseg=12000//downsample, noverlap=12000//downsample-10, boundary=None)
     max_bin = np.searchsorted(f, max_freq)
     ax.set_xlabel("Time in s")
     ax.set_ylabel("RR in bpm")
-    ax.pcolormesh(t, f[2:max_bin]*60, np.sqrt(np.abs(Zxx)[2:max_bin]))
+    ax.pcolormesh(t, f[2:max_bin]*60, np.log(1+np.abs(Zxx)[2:max_bin]))
     # ax2.set_ylim(f[2]*60, f[max_bin]*60) #f[max_bin]*60)
     plot_max()
 
@@ -69,4 +71,4 @@ if __name__ == "__main__":
     model_json = args.model_json
     input_path = args.data_path
 
-    visualize_stft_extractor(input_path, model_json)
+    visualize_model(input_path, model_json)

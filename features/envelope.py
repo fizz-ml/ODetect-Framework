@@ -45,6 +45,7 @@ class WindowEnvelopesAmplitude(WindowFeature):
     """
     def calc_feature(self, window):
         """ Returns the max and min envelope of the window signal. """
+        window = self._in_features[0].calc_feature(window)
         self._envelope_feature = WindowEnvelopes()
         lookahead = int(np.floor(float(self._lookahead_length*self._sampling_rate)))
         max_envelope, min_envelope = self._envelope_feature.calc_feature(window, lookahead=lookahead, delta=self._delta)
