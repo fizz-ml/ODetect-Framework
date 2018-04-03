@@ -52,23 +52,41 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
         data_x_train_list = [self._process_input(x) for x in train_x]
         data_y_train_list = [self._process_label(y) for y in train_y]
 
+        data_x_val_list = [self._process_input(x) for x in val_x]
+        data_y_val_list = [self._process_label(y) for y in val_y]
+
         def closure():
             opt.zero_grad()
             sq_err = 0
             length = 0
             l_p = 0
             for i in range(len(data_y_train_list)):
-                    x = data_x_train_list[i]
-                    y = data_y_train_list[i]
-                    out = self._cnn(x)
-                    mean = out[:,0,:]
-                    log_std = out[:,1,:]
-                    l_p += -t.sum(-(y-mean)**2/(2*t.exp(log_std*2))-1*log_std)
-                    length += y.size()[2]
-                    print('ysize', y.size()[2])
-            print('length', length)
+                x = data_x_train_list[i]
+                y = data_y_train_list[i]
+                out = self._cnn(x)
+                mean = out[:,0,:]
+                log_std = out[:,1,:]
+                l_p += -t.sum(-(y-mean)**2/(2*t.exp(log_std*2))-1*log_std)
+                length += y.size()[2]
             loss = l_p/length
+
+            sq_err_val = 0
+            length_val = 0
+            for i in range(len(data_y_val_list)):
+                x = data_x_val_list[i]
+                y = data_y_val_list[i]
+                out = self._cnn(x)
+                mean = out[:,0,:]
+                log_std = out[:,1,:]
+                sq_err_val += -t.sum(-(y-mean)**2/(2*t.exp(log_std*2))-1*log_std)
+                length_val += y.size()[2]
+            sq_err_val = sq_err_val/length_val
+            # sq_err_test = -t.sum(-(y-mean)**2/(2*t.exp(log_std*2))-1*log_std)
+
+            print("Train: ", loss.cpu().data.numpy(),"\t","Test: ", sq_err_val.cpu().data.numpy())
+
             loss.backward()
+
 
             l = [x.grad.cpu() for x in self._cnn.parameters()]
             print(loss)

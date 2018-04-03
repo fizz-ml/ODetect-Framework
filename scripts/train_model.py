@@ -3,6 +3,7 @@ from features.simple_filter import *
 from features.peak_feature import *
 from features.envelope import *
 from features.breath_cnn_feature import *
+from utils.model import build_model
 from utils.thermistor import instant_bpm
 import argparse
 import json
@@ -28,27 +29,13 @@ visualization_dict = {
     "plot_resp_rate_vs_target" : None
     }
 
-def train_model(sampling_rate,model_json_path,training_path,validation_path):
+def train_model(model, sampling_rate, training_path, validation_path):
     train_x,train_y = load_dataset(training_path,sampling_rate)
     val_x,val_y = load_dataset(validation_path,sampling_rate)
 
-    model_spec = json.load(open(model_json_path, 'r'))
-
-    features = []
-    for parameter_dict in model_spec:
-        feature_type =  parameter_dict["type"]
-        constructor = feature_dict[feature_type]
-        in_feature_ids = parameter_dict["in_features"]
-        in_features = [features[x] for x in in_feature_ids]
-        feature = constructor(sampling_rate,in_features,parameter_dict["params"])
-
-        #train the feature
+    for feature in model.get_list():
         if isinstance(feature,TrainableFeature):
             feature.train(train_x,train_y,val_x,val_y)
-
-        features.append(feature)
-    trained_model = features
-    return trained_model
 
 """
 def test_model(test_json,model,sampling_rate)
@@ -76,8 +63,8 @@ def test_model(test_json,model,sampling_rate)
     for vis,i in visualizations:
         visualization = visualizations_dict[vis]:
         visualization(model,test_x[i],test_y[i]]
-
 """
+
 def load_dataset(path,sampling_rate):
     files = os.listdir(path)
     inputs = []
@@ -109,11 +96,10 @@ def main():
     model_json_path = args.model_json_path
     training_path = args.training_path
     validation_path = args.validation_path
-    train_model(sampling_rate,model_json_path,training_path,validation_path)
+
+    model = build_model(sampling_rate,model_json_path)
+    train_model(model, sampling_rate, training_path, validation_path)
 
 if __name__ == "__main__":
     main()
-
-
-
 
