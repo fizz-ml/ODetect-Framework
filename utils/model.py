@@ -42,7 +42,7 @@ class Model:
         return self._features_dict
 
     def __call__(self, signal):
-        self._features_list[-1].calc_features(signal)
+        self._features_list[-1].calc_feature(signal)
 
 def build_model(sampling_rate,model_json_path):
     """ Given a json descriptor, generates the model as a dictionary of features. """

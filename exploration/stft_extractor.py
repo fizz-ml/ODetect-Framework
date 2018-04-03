@@ -11,7 +11,7 @@ def plot_max():
 
 def visualize_stft_extractor(input_path, model_json):
     # Parse the input data
-    data = h5py.File(dataset_path, 'r')['data']
+    data = h5py.File(input_path, 'r')['data']
 
     input_signal = data['signal']
     target_signal = data['target']
@@ -68,4 +68,4 @@ if __name__ == "__main__":
     model_json = args.model_json
     input_path = args.data_path
 
-    visualize_dataset(input_path, model_json)
+    visualize_stft_extractor(input_path, model_json)
