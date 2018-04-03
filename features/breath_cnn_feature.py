@@ -9,6 +9,7 @@ from torch import FloatTensor as FT
 from torch.autograd import Variable as V
 from scipy.signal import resample
 import os
+import copy
 
 class BreathCNNFeature(WindowFeature,TrainableFeature):
     def __init__(self,sampling_rate,in_features,parameter_dict):
@@ -89,15 +90,22 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
 
 
             l = [x.grad.cpu() for x in self._cnn.parameters()]
-            print(loss)
-            return loss
+            return loss, sq_err_val
 
-        #TODO: implement early stopping
+        # Keep track lowest validation error and associated state
+        min_val_err = 99999999999 #TODO: This needs to be infinity, but giving casting error
+        min_loss_state = None
         for i in range(self._train_time):
-            closure()
+            print('Minvalerr', min_val_err)
+            loss, val_err = closure()
+            if val_err.cpu().data.numpy()[0] < min_val_err:
+                min_val_err = val_err.cpu().data.numpy()[0]
+                min_loss_state = copy.deepcopy(self._cnn.state_dict())
             opt.step()
 
-        t.save(self._cnn.state_dict,self._param_path)
+        # Load the minimum validaiton error state back up
+        self._cnn.load_state_dict(min_loss_state)
+        t.save(self._cnn.state_dict(),self._param_path)
 
     def set_params(self, params):
         super(BreathCNNFeature,self).set_params(params)
@@ -109,7 +117,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
                 self._layers,
                 )
         if os.path.exists(self._param_path):
-            self._cnn.load_state_dict(t.load(self._param_path)())
+            self._cnn.load_state_dict(t.load(self._param_path))
 
     def get_params(self):
         params = super(BreathCNNFeature,self).get_params()
