@@ -58,6 +58,8 @@ def visualize_stft_extractor(input_path, model_json):
     # ax2.set_ylim(f[2]*60, f[max_bin]*60) #f[max_bin]*60)
     plot_max()
 
+    # Print the argmax above 5 bpm but below 40 bpm
+
 if __name__ == "__main__":
     # Parse Arguments
     parser = argparse.ArgumentParser(description='Process some integers.')

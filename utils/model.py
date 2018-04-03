@@ -21,12 +21,14 @@ feature_dict = {
 class Model:
     def __init__(self):
         self._features_list = []
+        self._names_list = []
         self._features_dict = {}
 
     def add_feature(self, feature_name, feature):
         if feature_name in self._features_dict.keys():
             raise ValueError("Duplicate name {} found in model description. Names must be unique.".format(feature_name))
         self._features_list.append(feature)
+        self._names_list.append(feature_name)
         self._features_dict[feature_name] = feature
 
     def get(self, identifier):
@@ -37,6 +39,9 @@ class Model:
 
     def get_list(self):
         return self._features_list
+
+    def get_names(self):
+        return self._names_list
 
     def get_dict(self):
         return self._features_dict

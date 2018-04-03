@@ -75,6 +75,16 @@ class SimpleLocalNorm(WindowFeature):
             }
         return param_template
 
+class Normalize(WindowFeature):
+    """ Subtract mean and divide by standard deviation. """
+    def calc_feature(self, window):
+        window = self._in_features[0].calc_feature(window)
+        return normalize(window)
+
+    def get_param_template(self):
+        param_template = {}
+        return param_template
+
 def normalize(ppg_signal):
     ppg_signal = (ppg_signal-np.mean(ppg_signal, axis=0))/np.std(ppg_signal)
     return ppg_signal
