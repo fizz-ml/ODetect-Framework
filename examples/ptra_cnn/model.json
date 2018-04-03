@@ -6,45 +6,50 @@
         "params": {}
     },
     {
-        "type": "butter",
+        "type": "norm",
         "in_features": [0],
+        "params": {}
+    },
+    {
+        "type": "butter",
+        "in_features": [1],
         "params": {"low_cut": 0.05, "high_cut": 1.5, "order": 3}
     },
     {
         "name": "filtered_input",
         "type": "local_norm",
-        "in_features": [1],
+        "in_features": [2],
         "params": {"local_window_length": 40}
     },
     {
         "name": "EA",
         "type": "ea",
-        "in_features": [2],
+        "in_features": [3],
         "params": {"lookahead_length": 0.025, "delta": 0.02, "normalize": true}
     },
     {
         "name": "PP",
         "type": "ptp",
-        "in_features": [2],
+        "in_features": [3],
         "params": {"lookahead_length": 0.025, "delta": 0.02, "interp": "spline", "s": 0, "toggle_p_t": true, "normalize": true}
     },
     {
         "name": "PT",
         "type": "ptp",
-        "in_features": [2],
+        "in_features": [3],
         "params": {"lookahead_length": 0.025, "delta": 0.02, "interp": "spline", "s": 0, "toggle_p_t": false, "normalize": true}
     },
     {
         "name": "CNN",
         "type": "breath_cnn",
-        "in_features": [2, 3, 4, 5],
+        "in_features": [3, 4, 5, 6],
         "params": {
             "channel_count" : 15,
             "dilation" : 10,
             "field" : 11,
             "layers" : 5,
             "down_sample" : 12,
-            "train_time" : 550,
+            "train_time" : 750,
             "learning_rate" : 0.0002,
             "param_path" : "bla.t7"
         }

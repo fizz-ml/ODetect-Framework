@@ -10,6 +10,7 @@ import os
 
 feature_dict = {
         "id" : IdentityWindowFeature,
+        "norm" : Normalize,
         "ea" : WindowEnvelopesAmplitude,
         "ptp" : WindowPeakTroughPeriods,
         "butter" : SimpleButterFilter,
