@@ -47,6 +47,10 @@ class Model:
     def get_dict(self):
         return self._features_dict
 
+    @property
+    def name(self):
+        return self._names_list[-1]
+
     def __call__(self, signal):
         return self._features_list[-1].calc_feature(signal)
 

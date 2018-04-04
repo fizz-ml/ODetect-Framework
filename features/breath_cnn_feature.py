@@ -116,7 +116,7 @@ class BreathCNNFeature(WindowFeature,TrainableFeature):
                 self._layers,
                 )
         if os.path.exists(self._param_path):
-            self._cnn.load_state_dict(t.load(self._param_path))
+            self._cnn.load_state_dict(t.load(self._param_path, map_location=lambda storage, loc: storage))
 
     def get_params(self):
         params = super(BreathCNNFeature,self).get_params()

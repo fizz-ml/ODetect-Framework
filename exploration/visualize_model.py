@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import argparse
 from scipy import signal
 from features.simple_filter import SimpleSplineFilter, SimpleLocalNorm, normalize
-
+from utils import thermistor
 
 def plot_max():
     figManager = plt.get_current_fig_manager()
@@ -49,16 +49,42 @@ def visualize_model(input_path, model_json):
     plot_max()
 
     # Visualize STFT
-    fig, ax = plt.subplots(1,1)
-    max_freq = 40/60
+    fig, ax = plt.subplots(2,1)
+    max_freq = 30/60
     downsample = 2
     f,t, Zxx = signal.stft(model_out[::downsample], fs=sampling_rate/downsample, nperseg=12000//downsample, noverlap=12000//downsample-10, boundary=None)
+    bf,bt, bZxx = signal.stft(filtered_target[::downsample], fs=sampling_rate/downsample, nperseg=12000//downsample, noverlap=12000//downsample-10, boundary=None)
     max_bin = np.searchsorted(f, max_freq)
-    ax.set_xlabel("Time in s")
-    ax.set_ylabel("RR in bpm")
-    ax.pcolormesh(t, f[2:max_bin]*60, np.log(1+np.abs(Zxx)[2:max_bin]))
+    ax[0].pcolormesh(bt, bf[2:max_bin]*60, np.log(1+np.abs(bZxx)[2:max_bin]))
+    ax[0].set_title("Thermistor")
+    ax[1].set_xlabel("Time in s")
+    ax[1].set_ylabel("RR in bpm")
+    ax[1].pcolormesh(t, f[2:max_bin]*60, np.log(1+np.abs(Zxx)[2:max_bin]))
+    ax[1].set_title("Prediction")
     # ax2.set_ylim(f[2]*60, f[max_bin]*60) #f[max_bin]*60)
     plot_max()
+
+
+    fig, ax = plt.subplots(1,1)
+    bpm = thermistor.instant_bpm(target_signal, sampling_rate, interpolate=False)
+    predicted = thermistor.instant_bpm(model_out, sampling_rate, interpolate=False)
+    ax.plot(bpm[0], bpm[1], label="Thermistor RR")
+    ax.plot(predicted[0], predicted[1], label="Predicted RR")
+    plt.legend()
+    plt.xlabel("Time in s")
+    plt.ylabel("RR in bpm")
+    plt.title("Predicted vs Thermistor RR")
+    plot_max()
+
+    fig = plt.figure()
+    ax = plt.axes(projection='3d')
+    ax.contour3D(f, t, Z, 50, cmap='binary')
+    ax.set_xlabel('x')
+    ax.set_ylabel('y')
+    ax.set_zlabel('z')
+
+    # Compute the centroid of the stft
+
 
 if __name__ == "__main__":
     # Parse Arguments

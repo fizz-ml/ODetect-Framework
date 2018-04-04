@@ -1,0 +1,30 @@
+[
+    {
+        "name": "input_signal",
+        "type": "id",
+        "in_features": [],
+        "params": {}
+    },
+    {
+        "type": "norm",
+        "in_features": [0],
+        "params": {}
+    },
+    {
+        "type": "butter",
+        "in_features": [1],
+        "params": {"low_cut": 0.05, "high_cut": 1.5, "order": 3}
+    },
+    {
+        "name": "filtered_input",
+        "type": "local_norm",
+        "in_features": [2],
+        "params": {"local_window_length": 40}
+    },
+    {
+        "name": "EA",
+        "type": "ea",
+        "in_features": [3],
+        "params": {"lookahead_length": 0.025, "delta": 0.02, "normalize": true}
+    }
+]

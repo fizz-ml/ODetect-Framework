@@ -1,0 +1,8 @@
+[
+    {
+        "name": "input_signal",
+        "type": "id",
+        "in_features": [],
+        "params": {}
+    }
+]

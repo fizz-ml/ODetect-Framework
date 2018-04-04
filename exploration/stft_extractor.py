@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import argparse
 from scipy import signal
+from features.simple_filter import SimpleSplineFilter, SimpleLocalNorm, normalize
+from utils import thermistor
 
 def plot_max():
     figManager = plt.get_current_fig_manager()
@@ -21,44 +23,55 @@ def visualize_stft_extractor(input_path, model_json):
 
     # Reconstruct the model
     model = build_model(sampling_rate, model_json)
-
-    # Visualize raw output
     model_out = model(input_signal)
-    fig, ax = plt.subplots(2,1)
-    ax[0].set_title("Model Output")
-    ax[0].plot(ts, model_out, label="Raw Input Signal")
 
-    ax[1].set_title("Raw Target Signal")
-    ax[1].plot(ts, target_signal, label="Raw Target Signal")
-
-    ax[0].set_xlabel("Time in seconds")
-    ax[1].set_xlabel("Time in seconds")
-    plot_max()
-
-    fig, ax = plt.subplots(2,1)
-    ax[0].set_title("Model Output")
-    ax[0].plot(ts, model_out, label="Raw Input Signal")
-
-    ax[1].set_title("Raw Target Signal")
-    ax[1].plot(ts, target_signal, label="Raw Target Signal")
-
-    ax[0].set_xlabel("Time in seconds")
-    ax[1].set_xlabel("Time in seconds")
-    plot_max()
+    filtered_target = SimpleSplineFilter(sampling_rate, [], {'local_window_length':60/200,'ds':20,'s':45}).calc_feature(target_signal)
+    filtered_target = SimpleLocalNorm(sampling_rate, [], {"local_window_length":40}).calc_feature(filtered_target)
 
     # Visualize STFT
-    fig, ax = plt.subplots(1,1)
-    max_freq = 40/60
-    downsample = 4
-    f,t, Zxx = signal.stft(model_out[::downsample], fs=sampling_rate/downsample, nperseg=8000//downsample, noverlap=8000//downsample-10, boundary=None)
-    max_bin = np.searchsorted(f, max_freq)
-    ax.set_xlabel("Time in s")
-    ax.set_ylabel("RR in bpm")
-    ax.pcolormesh(t, f[2:max_bin]*60, np.sqrt(np.abs(Zxx)[2:max_bin]))
-    # ax2.set_ylim(f[2]*60, f[max_bin]*60) #f[max_bin]*60)
-    plot_max()
+    max_freq = 30/60
+    downsample = 2
 
-    # Print the argmax above 5 bpm but below 40 bpm
+    f,t, Zxx = signal.stft(model_out[::downsample], fs=sampling_rate/downsample, nperseg=8000//downsample, noverlap=8000//downsample-10, boundary=None)
+    bf,bt, bZxx = signal.stft(filtered_target[::downsample], fs=sampling_rate/downsample, nperseg=8000//downsample, noverlap=8000//downsample-10, boundary=None)
+    max_bin = np.searchsorted(f, max_freq)
+    min_bin = 2
+
+    fig, ax = plt.subplots(2,1)
+    ax[0].pcolormesh(bt, bf[min_bin:max_bin]*60, np.log(1+np.abs(bZxx)[min_bin:max_bin]))
+    ax[1].pcolormesh(t, f[min_bin:max_bin]*60, np.log(1+np.abs(Zxx)[min_bin:max_bin]))
+
+    # Argmax in frequency
+    bmaxbins = np.argmax(np.abs(bZxx)[min_bin:max_bin], axis = 0) + min_bin
+    # Histogram correction
+    # ax[0].plot(bt, (bf[bmaxbins]+bf[bmaxbins+1])/2*60, 'r-')
+    maxbins = np.argmax(np.abs(Zxx)[min_bin:max_bin], axis = 0) + min_bin
+    # ax[1].plot(t, (f[maxbins]+f[maxbins+1])/2*60, 'r-')
+
+    ax[0].set_title("Thermistor STFT P=3 Centroid")
+    ax[1].set_title("Prediction STFT P=3 Centroid")
+    ax[0].set_ylabel("RR in bpm")
+    ax[1].set_xlabel("Time in s")
+    ax[1].set_ylabel("RR in bpm")
+
+    def centroid(Z, f, axis=0, p=1):
+        Z = np.power(Z, p)
+        a = f
+        if(axis==0):
+            centroid = np.dot(np.transpose(Z),a)/np.sum(Z, axis=axis)
+        elif(axis==1):
+            centroid = np.dot(Z,a)/np.sum(Z,axis=axis)
+        return centroid
+
+    # Centroid in frequency
+    bcentroid = centroid(np.log(1+np.abs(bZxx))[min_bin:max_bin], bf[min_bin:max_bin], axis = 0, p=3)
+    ax[0].plot(t, bcentroid*60, 'r-')
+    centroid = centroid(np.log(1+np.abs(Zxx))[min_bin:max_bin], f[min_bin:max_bin], axis = 0, p=3)
+    ax[1].plot(t, centroid*60, 'r-')
+    """
+    """
+
+    plot_max()
 
 if __name__ == "__main__":
     # Parse Arguments
