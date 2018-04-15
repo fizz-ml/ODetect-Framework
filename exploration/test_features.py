@@ -82,13 +82,14 @@ def visualize_dataset(dataset_path, plot):
 
 
     # SimpleSplineFilter
-    target_signal = normalize(target_signal)
-    filtered_target = SimpleSplineFilter(sampling_rate, [], {'local_window_length': 60/200, 'ds': 20, 's': 45.0}).calc_feature(target_signal)
-    alt_filtered_target = SimpleButterFilter(sampling_rate, [], {'low_cut': 3/60, 'high_cut': 40/60, 'order': 2}).calc_feature(target_signal)
+    norm_target = SimpleLocalNorm(sampling_rate, [], {'local_window_length': 80}).calc_feature(input_signal)
+    norm_target = normalize(norm_target)
+    filtered_target = SimpleSplineFilter(sampling_rate, [], {'local_window_length': 30/200, 'ds': 20, 's': 35.0}).calc_feature(norm_target)
+    alt_filtered_target = SimpleButterFilter(sampling_rate, [], {'low_cut': 3/60, 'high_cut': 40/60, 'order': 2}).calc_feature(norm_target)
 
     fig, ax = plt.subplots(1,1)
-    ax.set_title("SimpleSplineFilter on Target Signal")
-    ax.plot(ts, target_signal, label="Norm Target Signal")
+    ax.set_title("SimpleSplineFilter on Input Signal")
+    ax.plot(ts, norm_target, '+', label="Norm Input Signal")
     ax.plot(ts, filtered_target, label="SimpleSplineFilter")
     ax.plot(ts, alt_filtered_target, label="SimpleButterFilter")
 

@@ -57,6 +57,7 @@ def stft_centroid_bpm(input_signal, sampling_rate=200):
     max_bin = np.searchsorted(bf, max_freq)
     min_bin = 2
     bcentroid = centroid(np.log(1+np.abs(bZxx))[min_bin:max_bin], bf[min_bin:max_bin], axis = 0, p=3)
+    bcentroid = np.interp(np.arange(input_signal.size)/200, bt, bcentroid)
     return bcentroid*60
 
 def centroid(Z, f, axis=0, p=1):

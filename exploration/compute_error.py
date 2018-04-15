@@ -2,6 +2,7 @@ from utils.model import build_model
 import h5py
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib
 import argparse
 from scipy import signal
 from features.simple_filter import SimpleSplineFilter, SimpleLocalNorm, normalize
@@ -13,7 +14,12 @@ def plot_max():
     figManager.window.showMaximized()
     plt.show()
 
-def visualize_stft_extractor(input_path, model_json):
+def visualize_stft_extractor(input_path, model_json, thing):
+    font = {'family' : 'normal',
+            'size'   : 16}
+
+    matplotlib.rc('font', **font)
+
     # Parse the input data
     data = h5py.File(input_path, 'r')['data']
 
@@ -33,14 +39,15 @@ def visualize_stft_extractor(input_path, model_json):
     centroid = thermistor.stft_centroid_bpm(model_out, sampling_rate)
     tcentroid = thermistor.stft_centroid_bpm(target_signal, sampling_rate)
 
-    fig, ax = plt.subplots(1,1)
-    ax.plot(centroid, label="Predicted Centroid RR")
-    ax.plot(tcentroid, label="Target Centroid RR")
+    fig, (ax, ax1) = plt.subplots(1,2)
+    ax.plot(ts, centroid, label="Predicted Centroid RR")
+    ax.plot(ts, tcentroid, label="Target Centroid RR")
     ax.set_xlabel("Time in s")
     ax.set_ylabel("RR in bpm")
-    ax.set_title("STFT Centroid of {} and Thermistor on {}".format(model.name, os.path.basename(input_path).split('.')[-2]))
+    # ax.set_title("STFT Centroid of {} and Thermistor on {}".format(model.name, os.path.basename(input_path).split('.')[-2]))
+    ax.set_title("{}: STFT Centroid of {} and Thermistor".format(thing, model.name))
     plt.legend()
-    plot_max()
+    # plot_max()
 
     rmean_sq_error_centroid = np.sqrt(np.mean((tcentroid-centroid)**2))
     print("Root Mean Squared Error of Centroid: {}".format(rmean_sq_error_centroid))
@@ -48,12 +55,13 @@ def visualize_stft_extractor(input_path, model_json):
     model_bpm = thermistor.instant_bpm(model_out)
     t_bpm = thermistor.instant_bpm(target_signal)
 
-    fig, ax = plt.subplots(1,1)
-    ax.plot(model_bpm, label="Predicted Instant RR")
-    ax.plot(t_bpm, label="Target Instant RR")
-    ax.set_xlabel("Time in s")
-    ax.set_ylabel("RR in bpm")
-    ax.set_title("Instant RR of {} and Thermistor on {}".format(model.name, os.path.basename(input_path).split('.')[-2]))
+    # fig, ax = plt.subplots(1,1)
+    ax1.plot(ts, model_bpm, label="Predicted Instant RR")
+    ax1.plot(ts, t_bpm, label="Target Instant RR")
+    ax1.set_xlabel("Time in s")
+    ax1.set_ylabel("RR in bpm")
+    # ax1.set_title("{}: Instant RR of {} and Thermistor".format(model.name, os.path.basename(input_path).split('.')[-2]))
+    ax1.set_title("{}: Instant RR of {} and Thermistor".format(thing, model.name))
     plt.legend()
     plot_max()
 
@@ -65,10 +73,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('data_path', type=str, help='Path to h5 file to be visualized.')
     parser.add_argument('model_json', type=str, help='Path to json of model to be used as the feature.')
+    parser.add_argument('thing', type=str, help=' of model to be used as the feature.')
     # parser.add_argument('thing', type=int, help='Name of the dataset under raw containing the data folder of h5 files to be processed.')
     args = parser.parse_args()
 
     model_json = args.model_json
     input_path = args.data_path
+    thing = args.thing
 
-    visualize_stft_extractor(input_path, model_json)
+    visualize_stft_extractor(input_path, model_json, thing)

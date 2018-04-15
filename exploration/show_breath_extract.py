@@ -11,7 +11,7 @@ from scipy import interpolate
 from scipy.signal import butter, lfilter
 from scipy import signal
 
-from features.simple_filter import SimpleButterFilter, stupid_local_norm, SimpleSplineFilter
+from features.simple_filter import SimpleSplineFilter, SimpleLocalNorm, normalize
 from features.envelope import WindowEnvelopes, WindowEnvelopesAmplitude
 from features.peak_feature import WindowPeakTroughPeriods, WindowPeakTroughPoints
 from utils.thermistor import *
@@ -60,28 +60,21 @@ def visualize_dataset(dataset_path, plot):
     data = np.genfromtxt(dataset_path, delimiter=',')
     breath_signal = (data[:,3].flatten()+data[:,2].flatten())/2
 
+    target_signal = normalize(target_signal)
+    filtered_target = SimpleSplineFilter(sampling_rate, [], {'local_window_length':60/200,'ds':20,'s':45}).calc_feature(target_signal)
+    filtered_target = SimpleLocalNorm(sampling_rate, [], {"local_window_length":40}).calc_feature(filtered_target)
+
 
     # Plot
     sample_freq = 200
 
-    breath_signal = normalize(breath_signal)
-    w=np.hanning(20)
-    breath_avg = np.convolve(w/w.sum(),breath_signal,mode='same')
-
-    # breath_butter_filter = SimpleButterFilter(sample_freq, 3/60, 40/60, order=1)
-    # breath_filtered = breath_butter_filter.calc_feature(breath_signal)
     breath_butter_filter = SimpleSplineFilter(avg_win=60, ds=15, s=45.0)
     breath_filtered = stupid_local_norm(breath_butter_filter.calc_feature(breath_signal),10000)
     breath_filtered = normalize(breath_filtered)
 
-    # tck = interpolate.splrep(np.arange(breath_filtered1.size)[::40], breath_filtered1[::40], s=25.0)
-    # breath_filtered = interpolate.splev(np.arange(breath_filtered1.size), tck, der=0)
-
     # GT breath signal
-    # breath_filtered = normalize(breath_filtered)
     ((breath_peak_idx, breath_peak_val, breath_peak_period),(breath_trough_idx, breath_trough_val, breath_trough_period)) = WindowPeakTroughPoints().calc_feature(breath_filtered, delta=1.0, lookahead=100)
 
-    # ax2.plot(breath_trough_idx, np.reciprocal(breath_trough_period/sample_freq)*60, '+-', label="Thermistor Trough to Trough Frequency")
     fig, ax2 = plt.subplots(1,1)
     ax2.plot(breath_trough_idx, breath_trough_val, '.', markersize=20, label="Thermistor Trough to Trough Frequency")
     ax2.plot(breath_peak_idx, breath_peak_val, '.', markersize=20, label="Thermistor Trough to Trough Frequency")
@@ -99,9 +92,6 @@ def visualize_dataset(dataset_path, plot):
     y = breath_filtered
     yp, yt = WindowEnvelopes().calc_feature(y, 300, 1.0, s=3)
     ax2.plot(y, label="Filtered Thermistor")
-    # ax2.plot(yp, label="Max Envelope")
-    # ax2.plot(yt, label="Min Envelope")
-    # avg_env = (yt+yp)/2
 
     w = np.hanning(8000)
     mov_avg = np.convolve(w/w.sum(), y, 'same')
