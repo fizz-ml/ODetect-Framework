@@ -50,7 +50,6 @@ def visualize_stft_extractor(input_path, model_json, thing):
     # plot_max()
 
     rmean_sq_error_centroid = np.sqrt(np.mean((tcentroid-centroid)**2))
-    print("Root Mean Squared Error of Centroid: {}".format(rmean_sq_error_centroid))
 
     model_bpm = thermistor.instant_bpm(model_out)
     t_bpm = thermistor.instant_bpm(target_signal)
@@ -66,6 +65,7 @@ def visualize_stft_extractor(input_path, model_json, thing):
     plot_max()
 
     rmean_sq_error_bpm = np.sqrt(np.mean((t_bpm-model_bpm)**2))
+    print("Root Mean Squared Error of Centroid: {}".format(rmean_sq_error_centroid))
     print("Root Mean Squared Error of Instant BPM: {}".format(rmean_sq_error_bpm))
 
 if __name__ == "__main__":
