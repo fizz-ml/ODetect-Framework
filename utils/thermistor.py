@@ -36,7 +36,6 @@ def instant_breathing_period(breath_signal, sample_freq=200, interpolate=True):
     idxs = idxs[sort_idxs]
     periods = periods[sort_idxs]
 
-    print(periods)
     if interpolate:
         return np.interp(np.arange(breath_signal.size), idxs, periods/sample_freq)
     else:

@@ -73,12 +73,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Process some integers.')
     parser.add_argument('data_path', type=str, help='Path to h5 file to be visualized.')
     parser.add_argument('model_json', type=str, help='Path to json of model to be used as the feature.')
-    parser.add_argument('thing', type=str, help=' of model to be used as the feature.')
-    # parser.add_argument('thing', type=int, help='Name of the dataset under raw containing the data folder of h5 files to be processed.')
+    parser.add_argument('name', type=str, help='Name to be used for visualization.')
     args = parser.parse_args()
 
     model_json = args.model_json
     input_path = args.data_path
-    thing = args.thing
+    thing = args.name
 
     visualize_stft_extractor(input_path, model_json, thing)
